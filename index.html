@@ -1,0 +1,1515 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>个人所得税年度计算器 · 汇算退税与模式对比</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;padding:24px;color:#1a1a2e}
+.container{max-width:960px;margin:0 auto}
+.header{text-align:center;color:#fff;margin-bottom:24px}
+.header h1{font-size:28px;font-weight:700;margin-bottom:8px}
+.header p{font-size:14px;opacity:.9}
+.card{background:#fff;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.15);padding:28px;margin-bottom:20px}
+.card h2{font-size:18px;font-weight:600;color:#1a1a2e;margin-bottom:18px;padding-bottom:10px;border-bottom:2px solid #f0f0f5}
+h3{font-size:15px;margin:20px 0 10px;color:#374151}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:640px){.grid{grid-template-columns:1fr}}
+.fg{display:flex;flex-direction:column}
+.fg .sub{margin-top:auto;padding-top:6px}
+label{font-size:13px;font-weight:500;color:#4a4a68;margin-bottom:6px;display:block}
+label .h{font-weight:400;color:#9ca3af;font-size:11px}
+input[type=text],select{padding:11px 13px;font-size:15px;border:2px solid #e8e8f0;border-radius:9px;outline:none;font-family:inherit;background:#fff;width:100%}
+input[type=text]:focus,select:focus{border-color:#667eea}
+.row-check{display:flex;align-items:center;gap:8px;font-size:13px;color:#4a4a68;margin-bottom:8px}
+.row-check input{width:auto}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px}
+@media(max-width:640px){.kpis{grid-template-columns:1fr}}
+.kpi{background:#f8fafc;border-radius:12px;padding:16px;text-align:center}
+.kpi.highlight{background:linear-gradient(135deg,#d1fae5,#a7f3d0)}
+.kpi-label{font-size:12px;color:#6b7280;margin-bottom:6px}
+.kpi-value{font-size:20px;font-weight:700;color:#1a1a2e}
+.note{font-size:12px;color:#92400e;background:#fef3c7;border-radius:8px;padding:10px 12px;margin-bottom:12px;line-height:1.7;display:none}
+table.tbl{width:100%;border-collapse:collapse;font-size:13px}
+table.tbl td,table.tbl th{padding:8px 10px;border-bottom:1px solid #eef0f4;text-align:left}
+table.tbl th{color:#374151;font-size:12px;background:#f8fafc}
+table.tbl td.r{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+table.tbl th.r{text-align:right}
+.neg{color:#dc2626}.pos{color:#047857}
+.info{margin-top:14px}
+.info ul{list-style:none;font-size:12px;color:#6b7280;line-height:1.9}
+.info li{padding-left:14px;position:relative}
+.info li:before{content:'•';position:absolute;left:0}
+.policy-list{list-style:none;font-size:12px;color:#6b7280;line-height:1.9}
+.policy-list li{padding-left:14px;position:relative}
+.policy-list li:before{content:'•';position:absolute;left:0}
+.sub{font-size:11px;color:#9ca3af;margin-top:4px}
+.fold{display:flex;align-items:center;justify-content:space-between;width:100%;background:#f8fafc;border:none;border-radius:10px;padding:11px 14px;margin:20px 0 0;font-family:inherit;font-size:15px;font-weight:600;color:#374151;cursor:pointer;text-align:left;transition:background .15s}
+.fold:hover{background:#f1f5f9}
+.fold .fold-h{font-weight:400;font-size:11px;color:#9ca3af;margin-left:8px}
+.fold .fold-a{font-size:11px;color:#9ca3af;display:inline-block;transition:transform .18s ease}
+.fold[aria-expanded=true] .fold-a{transform:rotate(90deg)}
+.fold-body{margin-top:12px}
+.fold-title{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;background:none;border:none;border-bottom:2px solid #f0f0f5;padding:0 0 10px;margin:0;font-family:inherit;font-size:18px;font-weight:600;color:#1a1a2e;cursor:pointer;text-align:left}
+.fold-title>span:first-child{min-width:0;overflow-wrap:anywhere}
+.fold-title .fold-h{font-weight:400;font-size:11px;color:#9ca3af;margin-left:8px;white-space:nowrap}
+.fold-title:hover .fold-a{color:#667eea}
+.fold-title .fold-a{font-size:11px;color:#9ca3af;transition:transform .18s ease}
+.fold-title[aria-expanded=true] .fold-a{transform:rotate(90deg);color:#667eea}
+.fold-body-title{margin-top:18px}
+.fold-sub{display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:none;padding:0;margin:22px 0 0;font-family:inherit;font-size:15px;font-weight:600;color:#374151;cursor:pointer;text-align:left}
+.fold-sub:hover .fold-a{color:#667eea}
+.fold-sub .fold-h{font-weight:400;font-size:11px;color:#9ca3af;margin-left:8px}
+.fold-sub .fold-a{font-size:10px;color:#9ca3af;transition:transform .18s ease;margin-left:8px;flex:0 0 auto}
+.fold-sub[aria-expanded=true] .fold-a{transform:rotate(90deg);color:#667eea}
+.fold-sub-body{margin-top:12px}
+.privacy{display:flex;align-items:flex-start;gap:8px;background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;border-radius:10px;padding:10px 13px;font-size:12px;line-height:1.6;margin-bottom:14px}
+.privacy b{font-weight:600}
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.btn-copy{display:inline-flex;align-items:center;gap:6px;background:#667eea;color:#fff;border:none;border-radius:9px;padding:9px 15px;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:background .15s}
+.btn-copy:hover{background:#5a6fd6}
+.btn-copy.done{background:#059669}
+.copy-row{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap}
+.copy-hint{font-size:11px;color:#9ca3af}
+.btn-ghost{display:inline-flex;align-items:center;justify-content:center;background:#fff;color:#4b5563;border:1px solid #dfe2ee;border-radius:9px;padding:9px 15px;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;text-decoration:none;transition:border-color .15s,color .15s}
+.btn-ghost:hover{border-color:#667eea;color:#667eea}
+.shot-mask{position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(17,24,39,.56);display:none;align-items:center;justify-content:center;padding:16px;z-index:99}
+.shot-mask.on{display:flex}
+.shot-panel{background:#fff;border-radius:14px;max-width:520px;width:100%;max-height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 18px 50px rgba(0,0,0,.28)}
+.shot-head{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #eef0f5;font-size:14px;font-weight:600;color:#111827}
+.shot-head button{background:none;border:none;font-size:17px;line-height:1;color:#9ca3af;cursor:pointer;padding:2px 4px}
+.shot-head button:hover{color:#4b5563}
+.shot-body{overflow:auto;padding:14px 16px;background:#f6f7fb;flex:1 1 auto;-webkit-overflow-scrolling:touch}
+.shot-body img{width:100%;height:auto;display:block;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,.1)}
+.shot-acts{display:flex;gap:10px;padding:14px 16px 2px}
+.shot-acts .btn-copy,.shot-acts .btn-ghost{flex:1}
+.shot-hint{padding:8px 16px 14px;font-size:11px;color:#9ca3af;line-height:1.7}
+.shot-more{text-align:center;padding:0 16px 14px}
+.shot-more button{background:none;border:none;padding:2px;color:#667eea;font-family:inherit;font-size:12px;cursor:pointer;text-decoration:underline}
+.footer{text-align:center;color:rgba(255,255,255,.85);font-size:11px;line-height:1.9;padding:4px 8px 20px}
+.footer .ver{font-weight:600;color:#fff}
+@media(max-width:640px){
+  body{padding:12px}
+  .card{padding:16px;border-radius:12px}
+  .card h2{font-size:16px;margin-bottom:14px}
+  .header h1{font-size:22px}
+  .header p{font-size:12px}
+  .kpi{padding:13px}
+  .kpi-value{font-size:18px}
+  .fold-title{font-size:16px}
+  .fold-sub{font-size:14px}
+  .fold{padding:10px 12px;font-size:14px}
+  label{font-size:12px}
+  input[type=text],select{padding:10px 11px;font-size:16px}
+  table.tbl{font-size:12px}
+  table.tbl td,table.tbl th{padding:7px 8px}
+  .copy-row{flex-direction:column;align-items:stretch}
+  .btn-copy{justify-content:center}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>个人所得税年度计算器</h1>
+    <p>工资＋劳务报酬汇算退税测算 · 综合所得与个体户经营所得模式对比</p>
+  </div>
+
+  <div class="privacy">
+    <span>🔒</span>
+    <span><b>全部在本机浏览器计算，不上传任何工资数据。</b>本页为纯静态页面，没有后端接口，可断网使用；结果仅供参考，最终以税务机关口径为准。</span>
+  </div>
+
+  <div class="card">
+    <h2>① 收入</h2>
+    <div class="grid">
+      <div class="fg">
+        <label for="wageYear">全年工资薪金（元）<span class="h">税前，已扣社保公积金前</span></label>
+        <input type="text" id="wageYear" value="0" autocomplete="off">
+      </div>
+      <div class="fg">
+        <label for="laborYear">全年劳务报酬（元）<span class="h">含税金额，全年合计</span></label>
+        <input type="text" id="laborYear" value="0" autocomplete="off">
+      </div>
+      <div class="fg">
+        <label for="wageMonths">工资发放月数<span class="h">默认12；年中入职/离职按实际月数</span></label>
+        <input type="text" id="wageMonths" value="12" autocomplete="off">
+      </div>
+      <div class="fg">
+        <label for="laborTimes">劳务报酬支付次数<span class="h">默认12；按次预扣用</span></label>
+        <input type="text" id="laborTimes" value="12" autocomplete="off">
+      </div>
+      <div class="fg">
+        <label class="row-check"><input type="checkbox" id="bonusToggle"> 有全年一次性奖金</label>
+        <div id="bonusBox" style="display:none">
+          <input type="text" id="bonusAmount" value="0" autocomplete="off" style="margin-bottom:8px">
+          <label class="row-check"><input type="radio" name="bonusMethod" value="separate" checked> 单独计税</label>
+          <label class="row-check"><input type="radio" name="bonusMethod" value="combined"> 并入综合所得</label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <button type="button" class="fold fold-title" id="deductToggle" aria-expanded="false" aria-controls="deductWrap">
+      <span>② 扣除<span class="fold-h" id="deductSum"></span></span>
+      <span class="fold-a">▶</span>
+    </button>
+    <div class="fold-body fold-body-title" id="deductWrap" style="display:none">
+
+    <button type="button" class="fold fold-sub" id="dedSsToggle" aria-expanded="true" aria-controls="dedSsWrap">
+      <span>专项扣除（社保、公积金）<span class="fold-h" id="dedSsSum">—</span></span>
+      <span class="fold-a">▶</span>
+    </button>
+    <div class="fold-sub-body" id="dedSsWrap">
+    <div class="grid">
+      <div class="fg">
+        <label for="region">参保地区</label>
+        <select id="region">
+          <option value="huizhou" selected>惠州市</option>
+          <option value="shenzhen">深圳市</option>
+          <option value="manual">手动填写</option>
+        </select>
+      </div>
+      <div class="fg" id="fgStd">
+        <label>基数执行标准<span class="h">统一按 2026 年 10 月起</span></label>
+        <div class="sub" id="stdText">2026年10月起执行</div>
+      </div>
+      <div class="fg" id="fgMedTier">
+        <label for="medTier">医保档次<span class="h">深户强制一档</span></label>
+        <select id="medTier">
+          <option value="t1" selected>一档（个人 2%）</option>
+          <option value="t2">二档（个人 0.5%）</option>
+        </select>
+      </div>
+      <div class="fg" id="fgSswage">
+        <label for="ssWage">社保缴费工资（元/月）<span class="h">按本人工资申报，自动套用上下限</span></label>
+        <input type="text" id="ssWage" value="0" autocomplete="off">
+        <div class="sub" id="ssBreakdown">养老 — ；失业 —</div>
+      </div>
+      <div class="fg">
+        <label for="ssMonth">社保个人部分（元/月）<span class="h" id="ssMonthHint">惠州模式自动计算</span></label>
+        <input type="text" id="ssMonth" value="0" autocomplete="off" readonly>
+      </div>
+      <div class="fg" id="fgOtherIns">
+        <label for="otherIns">其他个人缴费（元/月）<span class="h">补充医疗、大病等</span></label>
+        <input type="text" id="otherIns" value="0" autocomplete="off">
+      </div>
+      <div class="fg">
+        <label for="hfBase">公积金缴费基数（元/月）<span class="h">按本人上年月均工资，各市有上限</span></label>
+        <input type="text" id="hfBase" value="0" autocomplete="off">
+        <div class="sub" id="hfBreakdown">填基数后自动算个人部分</div>
+      </div>
+      <div class="fg">
+        <label for="hfRate">公积金个人比例<span class="h">5%–12%，单位同比例</span></label>
+        <select id="hfRate">
+          <option value="0">不填</option>
+          <option value="5">5%</option>
+          <option value="6">6%</option>
+          <option value="7">7%</option>
+          <option value="8">8%</option>
+          <option value="9">9%</option>
+          <option value="10">10%</option>
+          <option value="11">11%</option>
+          <option value="12" selected>12%</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label for="hfMonth">公积金个人部分（元/月）<span class="h" id="hfMonthHint">基数为 0 时可手填</span></label>
+        <input type="text" id="hfMonth" value="0" autocomplete="off">
+      </div>
+      <div class="fg" id="fgSsbase">
+        <label for="ssBase">社保缴费基数（元/月）<span class="h">手动模式可选，用于 60%–300% 校验</span></label>
+        <input type="text" id="ssBase" value="0" autocomplete="off">
+      </div>
+      <div class="fg" id="fgAvgwage">
+        <label for="avgWage">当地社平月工资（元）<span class="h">手动模式可选</span></label>
+        <input type="text" id="avgWage" value="0" autocomplete="off">
+      </div>
+    </div>
+    <div class="sub" id="regionNote">惠州口径（企业职工），基数统一按 2026 年 10 月起执行：养老 8%（基数 5,521–27,603）、医疗（统账结合）2%（基数 4,463–22,315）、失业 0.2%（基数 2,040–28,710）、工伤与生育个人不缴，个人合计 10.2%。手动填写模式可自行录入。</div>
+    </div>
+
+    <button type="button" class="fold fold-sub" id="dedOtherToggle" aria-expanded="true" aria-controls="dedOtherWrap">
+      <span>其他扣除<span class="fold-h" id="dedOtherSum">—</span></span>
+      <span class="fold-a">▶</span>
+    </button>
+    <div class="fold-sub-body" id="dedOtherWrap">
+    <div class="grid">
+      <div class="fg">
+        <label for="pensionYear">个人养老金（元/年）<span class="h">最高 12,000 元</span></label>
+        <input type="text" id="pensionYear" value="0" autocomplete="off">
+      </div>
+    </div>
+    </div>
+
+    <button type="button" class="fold fold-sub" id="dedAddToggle" aria-expanded="true" aria-controls="dedAddWrap">
+      <span>专项附加扣除<span class="fold-h" id="dedAddSum">—</span></span>
+      <span class="fold-a">▶</span>
+    </button>
+    <div class="fold-sub-body" id="dedAddWrap">
+    <div class="grid">
+      <div class="fg">
+        <label for="childCount">子女教育人数<span class="h">2,000 元/人/月</span></label>
+        <input type="text" id="childCount" value="0" autocomplete="off">
+      </div>
+      <div class="fg">
+        <label for="infantCount">3岁以下婴幼儿人数<span class="h">2,000 元/人/月</span></label>
+        <input type="text" id="infantCount" value="0" autocomplete="off">
+      </div>
+      <div class="fg">
+        <label>继续教育</label>
+        <label class="row-check"><input type="checkbox" id="eduDegree"> 学历（继续教育）400 元/月</label>
+        <label class="row-check"><input type="checkbox" id="eduCert"> 职业资格 3,600 元/年（300 元/月）</label>
+        <div class="sub">学历教育最长扣 48 个月；职业资格在取得证书当年扣除。</div>
+      </div>
+      <div class="fg">
+        <label for="medicalTotal">大病医疗自付累计（元/年）<span class="h">医保目录内，超 1.5 万部分，限额 8 万</span></label>
+        <input type="text" id="medicalTotal" value="0" autocomplete="off" style="margin-bottom:8px">
+        <select id="medicalOwner">
+          <option value="self">由本人扣除</option>
+          <option value="spouse">由配偶扣除（本人不扣）</option>
+        </select>
+        <div class="sub">可由本人或配偶一方扣除，未成年子女由父母一方扣除。</div>
+      </div>
+      <div class="fg">
+        <label for="housingType">住房<span class="h">贷款利息与租金只能二选一</span></label>
+        <select id="housingType">
+          <option value="none">不填</option>
+          <option value="loan">住房贷款利息 1,000 元/月</option>
+          <option value="rent1500">住房租金 1,500 元/月（直辖市、省会、计划单列市等）</option>
+          <option value="rent1100">住房租金 1,100 元/月（市辖区户籍人口＞100 万）</option>
+          <option value="rent800">住房租金 800 元/月（市辖区户籍人口≤100 万）</option>
+        </select>
+        <div class="sub">房贷利息和住房租金同一纳税年度内只能享受其中一项。</div>
+      </div>
+      <div class="fg">
+        <label for="elderlyType">赡养老人</label>
+        <select id="elderlyType">
+          <option value="none">不填</option>
+          <option value="only">独生子女 3,000 元/月</option>
+          <option value="not">非独生子女（分摊）</option>
+        </select>
+        <input type="text" id="elderlyAmt" value="0" autocomplete="off" placeholder="每月分摊额，不超过 1,500 元" style="display:none;margin-top:8px">
+        <div class="sub">非独生子女与兄弟姐妹分摊，每人每月不超过 1,500 元。</div>
+      </div>
+    </div>
+    </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>③ 汇算结果</h2>
+    <div class="kpis">
+      <div class="kpi">
+        <div class="kpi-label">年度应纳个税</div>
+        <div class="kpi-value" id="kAnnual">--</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">平时已预缴</div>
+        <div class="kpi-value" id="kPrepaid">--</div>
+      </div>
+      <div class="kpi highlight">
+        <div class="kpi-label">预计退 / 补税</div>
+        <div class="kpi-value" id="kDiff">--</div>
+      </div>
+    </div>
+    <div class="note" id="noteBox"></div>
+    <div class="copy-row">
+      <button type="button" class="btn-copy" id="copyBtn">复制结果图片</button>
+      <button type="button" class="btn-ghost" id="copyTextBtn">复制文字</button>
+      <span class="copy-hint" id="copyHint">算完可存成一张图，直接发群里或发给 HR</span>
+    </div>
+    <textarea id="copyFallback" readonly style="display:none;width:100%;height:150px;margin-top:10px;padding:10px 12px;border:2px solid #e8e8f0;border-radius:9px;font-family:inherit;font-size:12px;line-height:1.7;color:#374151;background:#f8fafc;resize:vertical"></textarea>
+    <div class="shot-mask" id="shotMask">
+      <div class="shot-panel">
+        <div class="shot-head"><span>结果图片</span><button type="button" id="shotClose" aria-label="关闭">✕</button></div>
+        <div class="shot-body"><img id="shotImg" alt="个税测算结果图片"></div>
+        <div class="shot-acts">
+          <button type="button" class="btn-copy" id="shotCopy">复制图片</button>
+          <a class="btn-ghost" id="shotDl" download="个税测算结果.png">保存图片</a>
+        </div>
+        <div class="shot-hint" id="shotHint">手机上长按图片保存到相册；电脑上点「保存图片」或右键另存。</div>
+        <div class="shot-more"><button type="button" id="shotRetry">再试一次自动复制到剪贴板</button></div>
+      </div>
+    </div>
+    <button type="button" class="fold" id="detailToggle" aria-expanded="false" aria-controls="detailWrap">
+      <span>计算明细<span class="fold-h">点开查看逐项计算过程</span></span>
+      <span class="fold-a" id="detailArrow">▶</span>
+    </button>
+    <div class="fold-body" id="detailWrap" style="display:none">
+      <div class="tbl-wrap"><table class="tbl"><tbody id="detailBody"></tbody></table></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <button type="button" class="fold fold-title" id="compareToggle" aria-expanded="false" aria-controls="compareWrap">
+      <span>④ 模式对比：综合所得 vs 个体户经营所得<span class="fold-h" id="compareSum"></span></span>
+      <span class="fold-a">▶</span>
+    </button>
+    <div class="fold-body fold-body-title" id="compareWrap" style="display:none">
+    <div class="grid" style="margin-bottom:16px">
+      <div class="fg">
+        <label for="costInvoice">个体户模式：成本费用及发票金额（元/年）</label>
+        <input type="text" id="costInvoice" value="0" autocomplete="off">
+      </div>
+      <div class="fg">
+        <label>说明</label>
+        <div class="sub">个体户模式假设全部收入均按经营所得纳税；有综合所得时不再重复减除 6 万元及各专项扣除。</div>
+      </div>
+    </div>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead>
+        <tr><th>项目</th><th class="r">综合所得</th><th class="r">个体户经营所得</th></tr>
+      </thead>
+      <tbody id="compareBody"></tbody>
+    </table></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <button type="button" class="fold fold-title" id="taxTableToggle" aria-expanded="false" aria-controls="taxTableWrap">
+      <span>税率表参考</span>
+      <span class="fold-a">▶</span>
+    </button>
+    <div class="fold-body fold-body-title" id="taxTableWrap" style="display:none">
+    <h3>综合所得（年度，同时用于累计预扣）</h3>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>级数</th><th class="r">应纳税所得额</th><th class="r">税率</th><th class="r">速算扣除数</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td class="r">≤36,000</td><td class="r">3%</td><td class="r">0</td></tr>
+        <tr><td>2</td><td class="r">36,000~144,000</td><td class="r">10%</td><td class="r">2,520</td></tr>
+        <tr><td>3</td><td class="r">144,000~300,000</td><td class="r">20%</td><td class="r">16,920</td></tr>
+        <tr><td>4</td><td class="r">300,000~420,000</td><td class="r">25%</td><td class="r">31,920</td></tr>
+        <tr><td>5</td><td class="r">420,000~660,000</td><td class="r">30%</td><td class="r">52,920</td></tr>
+        <tr><td>6</td><td class="r">660,000~960,000</td><td class="r">35%</td><td class="r">85,920</td></tr>
+        <tr><td>7</td><td class="r">&gt;960,000</td><td class="r">45%</td><td class="r">181,920</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>经营所得（年度）</h3>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>级数</th><th class="r">应纳税所得额</th><th class="r">税率</th><th class="r">速算扣除数</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td class="r">≤30,000</td><td class="r">5%</td><td class="r">0</td></tr>
+        <tr><td>2</td><td class="r">30,000~90,000</td><td class="r">10%</td><td class="r">1,500</td></tr>
+        <tr><td>3</td><td class="r">90,000~300,000</td><td class="r">20%</td><td class="r">10,500</td></tr>
+        <tr><td>4</td><td class="r">300,000~500,000</td><td class="r">30%</td><td class="r">40,500</td></tr>
+        <tr><td>5</td><td class="r">&gt;500,000</td><td class="r">35%</td><td class="r">65,500</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>劳务报酬预扣率</h3>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>级数</th><th class="r">预扣预缴应纳税所得额</th><th class="r">预扣率</th><th class="r">速算扣除数</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td class="r">≤20,000</td><td class="r">20%</td><td class="r">0</td></tr>
+        <tr><td>2</td><td class="r">20,000~50,000</td><td class="r">30%</td><td class="r">2,000</td></tr>
+        <tr><td>3</td><td class="r">&gt;50,000</td><td class="r">40%</td><td class="r">7,000</td></tr>
+      </tbody>
+    </table></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <button type="button" class="fold fold-title" id="policyToggle" aria-expanded="false" aria-controls="policyWrap">
+      <span>政策说明</span>
+      <span class="fold-a">▶</span>
+    </button>
+    <div class="fold-body fold-body-title" id="policyWrap" style="display:none">
+      <ul class="policy-list">
+        <li>综合所得基本减除费用 60,000 元/年；汇算按全年计算，与任职月份无关</li>
+        <li>劳务报酬以不含增值税收入减除 20% 费用后的余额计入综合所得收入额</li>
+        <li>劳务报酬预扣：每次收入不超过 4,000 元减 800 元，超过则减 20%，再按预扣率表计算</li>
+        <li>工资薪金按累计预扣法预扣，适用综合所得税率表</li>
+        <li>大病医疗：医保目录范围内自付累计超 15,000 元的部分，8 万元限额内据实扣除，汇算时扣除，可由本人或配偶一方扣除</li>
+        <li>住房贷款利息 1,000 元/月、住房租金 800/1,100/1,500 元/月，二者不可同时享受</li>
+        <li>子女教育、3 岁以下婴幼儿照护各 2,000 元/人/月；赡养老人独生 3,000 元/月、非独生每人不超过 1,500 元/月</li>
+        <li>个人养老金最高 12,000 元/年，属于依法确定的其他扣除</li>
+        <li>个体户小规模纳税人年销售额 120 万以下（普票）免增值税，超过则全额按 1% 计征</li>
+        <li>经营所得减半：应纳税额 ×（不超过 200 万元的应纳税所得额 ÷ 全部应纳税所得额）× 50%</li>
+        <li>取得经营所得且无综合所得的，可减除 60,000 元基本费用、专项扣除、专项附加扣除及其他扣除</li>
+        <li>社保个人部分：养老 8%＋医疗（惠州 2%；深圳一档 2%、二档 0.5%）＋失业 0.2%，工伤与生育保险由单位缴纳，个人不缴</li>
+        <li>1% 征收率、六税两费减半、经营所得减半等优惠执行至 2027 年 12 月 31 日</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div><span class="ver">v2.0</span> · 政策口径更新于 2026-11-20 · 社保基数按 2026 年 10 月起执行</div>
+    <div>本工具为个人测算辅助，不构成税务建议；实际申报以税务机关口径与个人真实资料为准。</div>
+  </div>
+</div>
+
+<script>
+var COMP_TABLE = [
+  { max: 36000, rate: 0.03, ded: 0 },
+  { max: 144000, rate: 0.10, ded: 2520 },
+  { max: 300000, rate: 0.20, ded: 16920 },
+  { max: 420000, rate: 0.25, ded: 31920 },
+  { max: 660000, rate: 0.30, ded: 52920 },
+  { max: 960000, rate: 0.35, ded: 85920 },
+  { max: Infinity, rate: 0.45, ded: 181920 }
+];
+var BIZ_TABLE = [
+  { max: 30000, rate: 0.05, ded: 0 },
+  { max: 90000, rate: 0.10, ded: 1500 },
+  { max: 300000, rate: 0.20, ded: 10500 },
+  { max: 500000, rate: 0.30, ded: 40500 },
+  { max: Infinity, rate: 0.35, ded: 65500 }
+];
+var BONUS_TABLE = [
+  { max: 36000, rate: 0.03, ded: 0 },
+  { max: 144000, rate: 0.10, ded: 210 },
+  { max: 300000, rate: 0.20, ded: 1410 },
+  { max: 420000, rate: 0.25, ded: 2660 },
+  { max: 660000, rate: 0.30, ded: 4410 },
+  { max: 960000, rate: 0.35, ded: 7160 },
+  { max: Infinity, rate: 0.45, ded: 15160 }
+];
+var LABOR_WH_TABLE = [
+  { max: 20000, rate: 0.20, ded: 0 },
+  { max: 50000, rate: 0.30, ded: 2000 },
+  { max: Infinity, rate: 0.40, ded: 7000 }
+];
+
+// 社保费率费基：按参保地区配置
+// 个人费率：养老 8%；医疗按地区/档次；失业 0.2%；工伤、生育个人不缴
+var REGION_DATA = {
+  huizhou: {
+    name: '惠州市',
+    effective: '2026年10月起执行',
+    pensionRate: 0.08,
+    pensionMin: 5521,
+    pensionMax: 27603,
+    medicalRate: 0.02,
+    medicalMin: 4463,
+    medicalMax: 22315,
+    unempRate: 0.002,
+    unempMin: 2040,
+    unempMax: 28710,
+    note: '惠州口径（企业职工），基数统一按 2026 年 10 月起执行：养老 8%（基数 5,521–27,603）、医疗（统账结合）2%（基数 4,463–22,315）、失业 0.2%（基数 2,040–28,710）、工伤与生育个人不缴，个人合计 10.2%。生育 0.5% 含在单位 5.6% 内，个人不缴。'
+  },
+  shenzhen: {
+    name: '深圳市',
+    effective: '2026年10月起执行',
+    pensionRate: 0.08,
+    pensionMin: 5521,
+    pensionMax: 27603,
+    medicalMin: 6727,
+    medicalMax: 33633,
+    medicalTiers: { t1: 0.02, t2: 0.005 },
+    unempRate: 0.002,
+    unempMin: 2700,
+    unempMax: 48471,
+    note: '深圳口径，基数统一按 2026 年 10 月起执行：养老 8%（基数 5,521–27,603）、医疗一档 2%／二档 0.5%（基数 6,727–33,633）、失业 0.2%（基数 2,700–48,471）、工伤与生育个人不缴。深户强制一档，非深户可选一档或二档；深户单位另缴 1% 地方补充养老，个人不承担。'
+  }
+};
+
+function clamp(v, lo, hi) {
+  if (!(v > 0)) { return 0; }
+  if (v < lo) { return lo; }
+  if (v > hi) { return hi; }
+  return v;
+}
+
+function updateSocial() {
+  var region = sel('region');
+  var ssEl = document.getElementById('ssMonth');
+  var hint = document.getElementById('ssMonthHint');
+  var bd = document.getElementById('ssBreakdown');
+  if (!ssEl) { return; }
+
+  if (region === 'manual') {
+    ssEl.readOnly = false;
+    if (hint) { hint.textContent = '手动填写'; }
+    if (bd) { bd.textContent = '已切换为手动填写，请直接录入社保个人月缴额。'; }
+    return;
+  }
+
+  var cfg = REGION_DATA[region];
+  if (!cfg) {
+    ssEl.readOnly = false;
+    if (hint) { hint.textContent = '手动填写'; }
+    return;
+  }
+
+  ssEl.readOnly = true;
+  if (hint) { hint.textContent = cfg.name + '自动计算'; }
+
+  var pensionMin = cfg.pensionMin;
+  var pensionMax = cfg.pensionMax;
+  var unempMin = cfg.unempMin;
+  var unempMax = cfg.unempMax;
+  var medRate = cfg.medicalRate;
+  if (cfg.medicalTiers) {
+    var tier = sel('medTier');
+    if (cfg.medicalTiers[tier]) { medRate = cfg.medicalTiers[tier]; }
+  }
+
+  var wage = Math.max(0, val('ssWage'));
+
+  if (wage <= 0) {
+    ssEl.value = '0.00';
+    if (bd) { bd.textContent = '填入社保缴费工资后自动计算'; }
+    return;
+  }
+
+  var pBase = clamp(wage, pensionMin, pensionMax);
+  var uBase = clamp(wage, unempMin, unempMax);
+  var mBase = clamp(wage, cfg.medicalMin, cfg.medicalMax);
+  var pension = pBase * cfg.pensionRate;
+  var medical = mBase * medRate;
+  var unemp = uBase * cfg.unempRate;
+  var other = Math.max(0, val('otherIns'));
+  var total = pension + medical + unemp + other;
+
+  ssEl.value = total.toFixed(2);
+
+  if (bd) {
+    var medPct = (medRate * 100).toFixed(medRate * 100 % 1 === 0 ? 0 : 1);
+    var txt = '养老 ' + Math.round(pBase) + '×8%＝' + pension.toFixed(2) +
+              '；医疗 ' + Math.round(mBase) + '×' + medPct + '%＝' + medical.toFixed(2) +
+              '；失业 ' + Math.round(uBase) + '×0.2%＝' + unemp.toFixed(2);
+    if (other > 0) { txt += '；其他 ' + other.toFixed(2); }
+    if (pBase !== wage || uBase !== wage || mBase !== wage) {
+      txt += '（缴费工资已按上下限调整）';
+    }
+    bd.textContent = txt + '；合计 ' + total.toFixed(2) + ' 元/月';
+  }
+}
+
+// 公积金：填了基数和比例就自动算个人月缴额，否则保留手填
+function updateHF() {
+  var monthEl = document.getElementById('hfMonth');
+  var hintEl = document.getElementById('hfMonthHint');
+  var bd = document.getElementById('hfBreakdown');
+  if (!monthEl) { return; }
+
+  var base = Math.max(0, val('hfBase'));
+  var rate = Number(sel('hfRate'));
+  if (!(rate > 0)) { rate = 0; }
+
+  if (base > 0 && rate > 0) {
+    var m = base * rate / 100;
+    monthEl.value = m.toFixed(2);
+    monthEl.readOnly = true;
+    if (hintEl) { hintEl.textContent = '基数×比例自动计算'; }
+    if (bd) {
+      bd.textContent = '基数 ' + th(base) + ' × ' + rate + '% ＝ ' + m.toFixed(2) +
+        ' 元/月（年 ' + (m * 12).toFixed(2) + '，单位同比例另缴）';
+    }
+  } else {
+    monthEl.readOnly = false;
+    if (hintEl) { hintEl.textContent = '基数为 0 时可手填'; }
+    if (bd) {
+      bd.textContent = base > 0 ? '请选择个人比例（5%–12%）' : '填基数后自动算个人部分';
+    }
+  }
+}
+
+function pickBracket(table, income) {
+  for (var i = 0; i < table.length; i++) {
+    if (income <= table[i].max) { return table[i]; }
+  }
+  return table[table.length - 1];
+}
+
+function taxFrom(table, income) {
+  if (!(income > 0)) { return { tax: 0, bracket: null }; }
+  var b = pickBracket(table, income);
+  return { tax: Math.max(0, income * b.rate - b.ded), bracket: b };
+}
+
+function val(id) {
+  var el = document.getElementById(id);
+  if (!el) { return 0; }
+  var v = parseFloat(String(el.value).replace(/[, ]/g, ''));
+  return isFinite(v) ? v : 0;
+}
+
+function chk(id) {
+  var el = document.getElementById(id);
+  return !!(el && el.checked);
+}
+
+function sel(id) {
+  var el = document.getElementById(id);
+  return el ? el.value : '';
+}
+
+function money(n) {
+  var x = isFinite(n) ? n : 0;
+  return '¥' + x.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function th(n) {
+  return Number(n).toLocaleString('zh-CN');
+}
+
+function setText(id, text) {
+  var el = document.getElementById(id);
+  if (el) { el.textContent = text; }
+}
+
+function addRow(label, value, cls) {
+  var tr = document.createElement('tr');
+  var td1 = document.createElement('td');
+  td1.textContent = label;
+  var td2 = document.createElement('td');
+  td2.className = 'r' + (cls ? ' ' + cls : '');
+  td2.textContent = value;
+  tr.appendChild(td1);
+  tr.appendChild(td2);
+  return tr;
+}
+
+function addRow3(label, a, b, cls) {
+  var tr = document.createElement('tr');
+  var td1 = document.createElement('td');
+  td1.textContent = label;
+  var td2 = document.createElement('td');
+  td2.className = 'r';
+  td2.textContent = a;
+  var td3 = document.createElement('td');
+  td3.className = 'r' + (cls ? ' ' + cls : '');
+  td3.textContent = b;
+  tr.appendChild(td1);
+  tr.appendChild(td2);
+  tr.appendChild(td3);
+  return tr;
+}
+
+function compute() {
+  // ---- 收入 ----
+  var wage = Math.max(0, val('wageYear'));
+  var labor = Math.max(0, val('laborYear'));
+  var months = Math.round(val('wageMonths'));
+  if (!(months > 0)) { months = 12; }
+  if (months > 12) { months = 12; }
+  var times = Math.round(val('laborTimes'));
+  if (!(times > 0)) { times = 12; }
+  if (times > 36) { times = 36; }
+
+  var hasBonus = chk('bonusToggle');
+  var bonus = hasBonus ? Math.max(0, val('bonusAmount')) : 0;
+  var bonusMethod = 'separate';
+  var radios = document.getElementsByName('bonusMethod');
+  for (var i = 0; i < radios.length; i++) {
+    if (radios[i].checked) { bonusMethod = radios[i].value; }
+  }
+
+  // ---- 专项扣除 ----
+  var ssMonth = Math.max(0, val('ssMonth'));
+  var hfMonth = Math.max(0, val('hfMonth'));
+  var ssBase = Math.max(0, val('ssBase'));
+  var avgWage = Math.max(0, val('avgWage'));
+  var pension = Math.min(Math.max(0, val('pensionYear')), 12000);
+
+  // ---- 专项附加扣除 ----
+  var childCount = Math.max(0, Math.round(val('childCount')));
+  var infantCount = Math.max(0, Math.round(val('infantCount')));
+  var eduMonthly = 0;
+  if (chk('eduDegree')) { eduMonthly += 400; }
+  if (chk('eduCert')) { eduMonthly += 300; }
+
+  var medicalTotal = Math.max(0, val('medicalTotal'));
+  var medicalOwner = sel('medicalOwner');
+  var medicalDeduction = 0;
+  if (medicalOwner === 'self') {
+    medicalDeduction = Math.min(Math.max(0, medicalTotal - 15000), 80000);
+  }
+
+  var loan = 0;
+  var rent = 0;
+  var housingType = sel('housingType');
+  if (housingType === 'loan') { loan = 1000; }
+  else if (housingType === 'rent1500') { rent = 1500; }
+  else if (housingType === 'rent1100') { rent = 1100; }
+  else if (housingType === 'rent800') { rent = 800; }
+
+  var elderlyType = sel('elderlyType');
+  var elderly = 0;
+  if (elderlyType === 'only') { elderly = 3000; }
+  else if (elderlyType === 'not') { elderly = Math.min(Math.max(0, val('elderlyAmt')), 1500); }
+
+  var addMonthly = childCount * 2000 + infantCount * 2000 + eduMonthly + loan + rent + elderly;
+  var addYear = addMonthly * 12 + medicalDeduction;
+
+  var ssYear = ssMonth * months;
+  var hfYear = hfMonth * months;
+
+  // ---- 劳务报酬口径 ----
+  var perTimeIncl = times > 0 ? labor / times : 0;
+  var vatExempt = perTimeIncl <= 500;
+  var laborNet = vatExempt ? labor : labor / 1.01;
+  var vat = vatExempt ? 0 : laborNet * 0.01;
+  var surtax = vat * 0.06;
+  var laborIncomeAmount = laborNet * 0.8;
+
+  // ---- 年度综合所得 ----
+  var comprehensive = wage + laborIncomeAmount;
+  if (hasBonus && bonusMethod === 'combined') { comprehensive += bonus; }
+  var taxable = Math.max(0, comprehensive - 60000 - ssYear - hfYear - addYear - pension);
+  var annualResult = taxFrom(COMP_TABLE, taxable);
+  var annualTax = annualResult.tax;
+
+  // ---- 年终奖 ----
+  var bonusTax = 0;
+  var bonusBracket = null;
+  if (hasBonus && bonus > 0 && bonusMethod === 'separate') {
+    var br = taxFrom(BONUS_TABLE, bonus);
+    bonusTax = br.tax;
+    bonusBracket = br.bracket;
+  }
+
+  // ---- 工资累计预扣 ----
+  var wageForWithhold = wage + ((hasBonus && bonusMethod === 'combined') ? bonus : 0);
+  var prepaidWage = 0;
+  if (wageForWithhold > 0 && months > 0) {
+    var mw = wageForWithhold / months;
+    var monthlyOther = pension / 12;
+    var cumDue = 0;
+    for (var m = 1; m <= months; m++) {
+      var cumIncome = mw * m;
+      var cumDeduct = 5000 * m + (ssMonth + hfMonth) * m + addMonthly * m + monthlyOther * m;
+      var due = taxFrom(COMP_TABLE, Math.max(0, cumIncome - cumDeduct)).tax;
+      prepaidWage += (due - cumDue);
+      cumDue = due;
+    }
+  }
+
+  // ---- 劳务报酬按次预扣 ----
+  var prepaidLabor = 0;
+  var perTimeTax = 0;
+  var laborWhTaxable = 0;
+  if (labor > 0 && times > 0) {
+    var perTime = labor / times;
+    var whDeduct = perTime <= 4000 ? 800 : perTime * 0.2;
+    laborWhTaxable = Math.max(0, perTime - whDeduct);
+    var whBracket = pickBracket(LABOR_WH_TABLE, laborWhTaxable);
+    perTimeTax = Math.max(0, laborWhTaxable * whBracket.rate - whBracket.ded);
+    prepaidLabor = perTimeTax * times;
+  }
+
+  var prepaidTotal = prepaidWage + prepaidLabor + bonusTax;
+  var totalDue = annualTax + bonusTax;
+  var diff = prepaidTotal - totalDue;
+
+  // ---- 个体户模式 ----
+  var bizRevenue = wage + labor + bonus;
+  var bizVat = bizRevenue <= 1200000 ? 0 : bizRevenue / 1.01 * 0.01;
+  var bizSurtax = bizVat * 0.06;
+  var hasCompIncome = wage > 0 || labor > 0;
+  var bizBasic = hasCompIncome ? 0 : (60000 + ssYear + hfYear + addYear + pension);
+  var bizTaxable = Math.max(0, bizRevenue - Math.max(0, val('costInvoice')) - bizBasic);
+  var bizTaxBefore = taxFrom(BIZ_TABLE, bizTaxable).tax;
+  var bizRelief = 0;
+  if (bizTaxable > 0) {
+    bizRelief = bizTaxBefore * (Math.min(bizTaxable, 2000000) / bizTaxable) * 0.5;
+  }
+  var bizTax = Math.max(0, bizTaxBefore - bizRelief);
+  var bizTotal = bizVat + bizSurtax + bizTax;
+
+  var compTotalTax = vat + surtax + totalDue;
+  var compAfter = (wage + labor + bonus) - compTotalTax;
+  var bizAfter = bizRevenue - bizTotal;
+
+  render({
+    wage: wage, labor: labor, months: months, times: times, bonus: bonus,
+    bonusMethod: bonusMethod, ssMonth: ssMonth, hfMonth: hfMonth,
+    ssYear: ssYear, hfYear: hfYear, addMonthly: addMonthly, addYear: addYear,
+    medicalDeduction: medicalDeduction, medicalTotal: medicalTotal, medicalOwner: medicalOwner,
+    pension: pension, ssBase: ssBase, avgWage: avgWage,
+    laborNet: laborNet, vat: vat, surtax: surtax, vatExempt: vatExempt,
+    laborIncomeAmount: laborIncomeAmount, comprehensive: comprehensive, taxable: taxable,
+    annualTax: annualTax, annualBracket: annualResult.bracket, bonusTax: bonusTax,
+    bonusBracket: bonusBracket, prepaidWage: prepaidWage, prepaidLabor: prepaidLabor,
+    perTimeTax: perTimeTax, laborWhTaxable: laborWhTaxable,
+    prepaidTotal: prepaidTotal, totalDue: totalDue, diff: diff,
+    bizRevenue: bizRevenue, bizVat: bizVat, bizSurtax: bizSurtax, bizBasic: bizBasic,
+    bizTaxable: bizTaxable, bizTaxBefore: bizTaxBefore, bizRelief: bizRelief,
+    bizTax: bizTax, bizTotal: bizTotal, compTotalTax: compTotalTax,
+    compAfter: compAfter, bizAfter: bizAfter,
+    childCount: childCount, infantCount: infantCount, eduMonthly: eduMonthly,
+    loan: loan, rent: rent, elderly: elderly
+  });
+}
+
+function render(d) {
+  window.__lastResult = d;
+  // 折叠栏摘要：收起后仍能看到已填金额
+  var ssTotal = d.ssMonth + d.hfMonth;
+  setText('dedSsSum', ssTotal > 0.005 ? money(ssTotal) + '/月' : '未填');
+  setText('dedOtherSum', d.pension > 0.005 ? money(d.pension) + '/年' : '未填');
+  var addMed = d.addYear - d.addMonthly * 12;
+  setText('dedAddSum', d.addMonthly > 0.005
+    ? money(d.addMonthly) + '/月' + (addMed > 0.005 ? '＋大病 ' + money(addMed) : '')
+    : (addMed > 0.005 ? '大病 ' + money(addMed) : '未填'));
+  setText('deductSum', '扣除合计 ' + money(d.ssYear + d.hfYear + d.addYear + d.pension) + '/年');
+  setText('kAnnual', money(d.totalDue));
+  setText('kPrepaid', money(d.prepaidTotal));
+  var diffEl = document.getElementById('kDiff');
+  if (diffEl) {
+    if (d.diff > 0.005) {
+      diffEl.textContent = '退税 ' + money(d.diff);
+      diffEl.className = 'kpi-value pos';
+    } else if (d.diff < -0.005) {
+      diffEl.textContent = '补税 ' + money(-d.diff);
+      diffEl.className = 'kpi-value neg';
+    } else {
+      diffEl.textContent = money(0);
+      diffEl.className = 'kpi-value';
+    }
+  }
+
+  // 提示
+  var notes = [];
+  if (d.avgWage > 0 && d.ssBase > 0) {
+    var lo = d.avgWage * 0.6;
+    var hi = d.avgWage * 3;
+    if (d.ssBase < lo) {
+      notes.push('社保缴费基数 ' + money(d.ssBase) + ' 低于当地社平 60%（' + money(lo) + '），实际申报时通常按下限核定。');
+    }
+    if (d.ssBase > hi) {
+      notes.push('社保缴费基数 ' + money(d.ssBase) + ' 超过当地社平 300%（' + money(hi) + '），超出部分不作为缴费基数。');
+    }
+  }
+  if (d.medicalOwner === 'spouse' && d.medicalTotal > 0) {
+    notes.push('大病医疗已选择由配偶扣除，本人年度汇算中不计入该项扣除。');
+  }
+  if (d.medicalTotal > 0 && d.medicalOwner === 'self') {
+    notes.push('大病医疗按“自付 ' + money(d.medicalTotal) + ' 减 1.5 万后、8 万限额”，实际可扣 ' + money(d.medicalDeduction) + '。');
+  }
+  if (d.loan > 0) {
+    notes.push('住房按贷款利息 1,000 元/月 扣除，同年度不再享受住房租金。');
+  } else if (d.rent > 0) {
+    notes.push('住房按租金 ' + money(d.rent) + '/月 扣除，同年度不再享受贷款利息。');
+  }
+  var noteBox = document.getElementById('noteBox');
+  if (noteBox) {
+    if (notes.length > 0) {
+      noteBox.innerHTML = notes.join('<br>');
+      noteBox.style.display = 'block';
+    } else {
+      noteBox.innerHTML = '';
+      noteBox.style.display = 'none';
+    }
+  }
+
+  // 明细
+  var body = document.getElementById('detailBody');
+  if (body) {
+    body.innerHTML = '';
+    body.appendChild(addRow('工资薪金收入（' + d.months + ' 个月）', money(d.wage)));
+    body.appendChild(addRow('劳务报酬（含税）', money(d.labor)));
+    body.appendChild(addRow('劳务报酬收入额（不含税 × 80%）', money(d.laborIncomeAmount)));
+    body.appendChild(addRow('综合所得收入额', money(d.comprehensive)));
+    body.appendChild(addRow('减：基本减除费用', money(60000)));
+    body.appendChild(addRow('减：专项扣除（社保＋公积金）', money(d.ssYear + d.hfYear)));
+    body.appendChild(addRow('减：专项附加扣除', money(d.addYear)));
+    body.appendChild(addRow('减：个人养老金等其他扣除', money(d.pension)));
+    body.appendChild(addRow('应纳税所得额', money(d.taxable)));
+    var rateText = d.annualBracket ? (Math.round(d.annualBracket.rate * 10000) / 100) + '%' : '—';
+    var dedText = d.annualBracket ? money(d.annualBracket.ded) : '—';
+    body.appendChild(addRow('适用税率 / 速算扣除数', rateText + ' / ' + dedText));
+    body.appendChild(addRow('综合所得应纳税额', money(d.annualTax)));
+    if (d.bonusTax > 0) {
+      var bRate = d.bonusBracket ? (Math.round(d.bonusBracket.rate * 10000) / 100) + '%' : '—';
+      body.appendChild(addRow('年终奖单独计税（税率 ' + bRate + '）', money(d.bonusTax)));
+    }
+    body.appendChild(addRow('年度应纳个税合计', money(d.totalDue)));
+    body.appendChild(addRow('已预缴：工资累计预扣', money(d.prepaidWage)));
+    body.appendChild(addRow('已预缴：劳务报酬按次预扣（每次 ' + money(d.perTimeTax) + '）', money(d.prepaidLabor)));
+    if (d.bonusTax > 0) {
+      body.appendChild(addRow('已预缴：年终奖代扣', money(d.bonusTax)));
+    }
+    body.appendChild(addRow('已预缴合计', money(d.prepaidTotal)));
+    var verdict = d.diff > 0.005 ? '应退税 ' + money(d.diff) : (d.diff < -0.005 ? '应补税 ' + money(-d.diff) : '不退不补');
+    body.appendChild(addRow('汇算结果', verdict, d.diff >= 0 ? 'pos' : 'neg'));
+  }
+
+  // 模式对比
+  var cb = document.getElementById('compareBody');
+  if (cb) {
+    cb.innerHTML = '';
+    cb.appendChild(addRow3('增值税', money(d.vat), money(d.bizVat)));
+    cb.appendChild(addRow3('附加税', money(d.surtax), money(d.bizSurtax)));
+    cb.appendChild(addRow3('个人所得税', money(d.totalDue), money(d.bizTax)));
+    cb.appendChild(addRow3('总税负', money(d.compTotalTax), money(d.bizTotal)));
+    cb.appendChild(addRow3('税后到手', money(d.compAfter), money(d.bizAfter)));
+    var gap = Math.abs(d.compAfter - d.bizAfter);
+    var verdict = gap < 0.005 ? '两种模式税后收入相同' :
+      (d.bizAfter > d.compAfter ? '个体户模式多到手 ' + money(gap) : '综合所得模式多到手 ' + money(gap));
+    setText('compareSum', (d.wage > 0 || d.labor > 0 || d.bonus > 0) ? verdict : '');
+    var tr = document.createElement('tr');
+    var td = document.createElement('td');
+    td.colSpan = 3;
+    td.className = 'pos';
+    td.textContent = '结论：' + verdict;
+    tr.appendChild(td);
+    cb.appendChild(tr);
+  }
+}
+
+function setDisplay(id, show) {
+  var el = document.getElementById(id);
+  if (el) { el.style.display = show ? 'flex' : 'none'; }
+}
+
+function syncUI() {
+  var bonusBox = document.getElementById('bonusBox');
+  if (bonusBox) {
+    bonusBox.style.display = chk('bonusToggle') ? 'block' : 'none';
+  }
+  var elderlyAmt = document.getElementById('elderlyAmt');
+  if (elderlyAmt) {
+    elderlyAmt.style.display = sel('elderlyType') === 'not' ? 'block' : 'none';
+  }
+  var region = sel('region');
+  var isHz = region === 'huizhou';
+  var isSz = region === 'shenzhen';
+  var auto = isHz || isSz;
+  setDisplay('fgMedTier', isSz);
+  setDisplay('fgStd', auto);
+  setDisplay('fgSswage', auto);
+  setDisplay('fgOtherIns', auto);
+  setDisplay('fgSsbase', !auto);
+  setDisplay('fgAvgwage', !auto);
+  var stdEl = document.getElementById('stdText');
+  if (stdEl) {
+    if (auto && REGION_DATA[region]) {
+      var c = REGION_DATA[region];
+      stdEl.textContent = c.effective + '｜养老 ' + th(c.pensionMin) + '–' + th(c.pensionMax) +
+        '；医疗 ' + th(c.medicalMin) + '–' + th(c.medicalMax) +
+        '；失业 ' + th(c.unempMin) + '–' + th(c.unempMax);
+    } else {
+      stdEl.textContent = '手动填写模式不套用地区标准';
+    }
+  }
+  var noteEl = document.getElementById('regionNote');
+  if (noteEl) {
+    if (auto && REGION_DATA[region]) {
+      noteEl.textContent = REGION_DATA[region].note;
+    } else {
+      noteEl.textContent = '手动填写模式：请直接录入社保个人月缴额；如填了缴费基数与当地社平工资，会校验 60%–300% 区间。';
+    }
+  }
+}
+
+function refresh() {
+  syncUI();
+  updateSocial();
+  updateHF();
+  compute();
+}
+
+var all = document.querySelectorAll('input, select');
+for (var k = 0; k < all.length; k++) {
+  all[k].addEventListener('input', refresh);
+  all[k].addEventListener('change', refresh);
+}
+
+// 折叠区通用：点击标题栏展开/收起（计算明细、税率表参考、政策说明共用）
+(function () {
+  var folds = document.querySelectorAll('.fold');
+  for (var i = 0; i < folds.length; i++) {
+    (function (btn) {
+      var targetId = btn.getAttribute('aria-controls');
+      var wrap = targetId ? document.getElementById(targetId) : null;
+      if (!wrap) { return; }
+      btn.addEventListener('click', function () {
+        var open = btn.getAttribute('aria-expanded') === 'true';
+        btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+        wrap.style.display = open ? 'none' : 'block';
+      });
+    })(folds[i]);
+  }
+})();
+
+// URL 参数预填：?wage=400000&region=huizhou&ss=8000
+// 参数名可直接用输入框 id，也可用下面的短别名
+var PARAM_ALIAS = {
+  w: 'wageYear', wage: 'wageYear',
+  l: 'laborYear', labor: 'laborYear',
+  months: 'wageMonths', times: 'laborTimes',
+  bonus: 'bonusAmount', bonusamt: 'bonusAmount',
+  ss: 'ssWage', sswage: 'ssWage',
+  hf: 'hfBase', hfbase: 'hfBase',
+  hfrate: 'hfRate',
+  child: 'childCount', children: 'childCount',
+  infant: 'infantCount', baby: 'infantCount',
+  medical: 'medicalTotal',
+  pension: 'pensionYear',
+  housing: 'housingType',
+  elderly: 'elderlyType',
+  cost: 'costInvoice',
+  wageyear: 'wageYear', laboryear: 'laborYear', wagemonts: 'wageMonths',
+  childcount: 'childCount', infantcount: 'infantCount', medicaltotal: 'medicalTotal',
+  pensionyear: 'pensionYear', housingtype: 'housingType', elderlytype: 'elderlyType',
+  costinvoice: 'costInvoice', otherins: 'otherIns', hfmonth: 'hfMonth',
+  ssbase: 'ssBase', avgwage: 'avgWage', medtier: 'medTier',
+  medicalowner: 'medicalOwner', region: 'region'
+};
+
+function applyUrlParams() {
+  var qs = String(window.location.search || '').replace(/^\?/, '');
+  if (!qs) { return; }
+  var pairs = qs.split('&');
+  for (var i = 0; i < pairs.length; i++) {
+    if (!pairs[i]) { continue; }
+    var eq = pairs[i].indexOf('=');
+    if (eq < 0) { continue; }
+    var key = decodeURIComponent(pairs[i].substring(0, eq)).toLowerCase().trim();
+    var raw = decodeURIComponent(pairs[i].substring(eq + 1).replace(/\+/g, ' ')).trim();
+    var id = PARAM_ALIAS[key] || key;
+
+    // 年终奖方式走单选组
+    if (id === 'bonusMethod') {
+      var radios = document.getElementsByName('bonusMethod');
+      for (var r = 0; r < radios.length; r++) {
+        if (radios[r].value === raw) { radios[r].checked = true; }
+      }
+      continue;
+    }
+    // 住房简写：rent 默认按 1500 档
+    if (id === 'housingType' && raw === 'rent') { raw = 'rent1500'; }
+
+    var el = document.getElementById(id);
+    if (!el) { continue; }
+    if (el.type === 'checkbox') {
+      el.checked = (raw === '1' || raw === 'true' || raw === 'on' || raw === 'yes');
+    } else {
+      el.value = raw;
+    }
+  }
+}
+
+// 结果摘要：文字版和图片版共用同一份数据，避免两处口径不一致
+function summaryModel() {
+  var d = window.__lastResult;
+  if (!d) { return null; }
+  var income = [];
+  income.push({ label: '工资薪金', value: money(d.wage) + '（' + d.months + ' 个月）' });
+  if (d.labor > 0) { income.push({ label: '劳务报酬', value: money(d.labor) + '（' + d.times + ' 次）' }); }
+  if (d.bonus > 0) { income.push({ label: '年终奖', value: money(d.bonus) + '（' + (d.bonusMethod === 'combined' ? '并入综合所得' : '单独计税') + '）' }); }
+  var cut = [
+    { label: '社保公积金（年）', value: money(d.ssYear + d.hfYear) },
+    { label: '专项附加扣除（年）', value: money(d.addYear) },
+    { label: '应纳税所得额', value: money(d.taxable) }
+  ];
+  var refund = d.diff > 0.005, owe = d.diff < -0.005;
+  return {
+    income: income,
+    cut: cut,
+    due: money(d.totalDue),
+    prepaid: money(d.prepaidTotal),
+    diffAbs: money(Math.abs(d.diff)),
+    diffTag: refund ? '应退税' : (owe ? '应补税' : '不退不补'),
+    diffTone: refund ? 'good' : (owe ? 'bad' : 'ink'),
+    diffText: refund ? '应退税 ' + money(d.diff) : (owe ? '应补税 ' + money(-d.diff) : '不退不补')
+  };
+}
+
+function buildSummary() {
+  var m = summaryModel();
+  if (!m) { return ''; }
+  var L = ['【个税测算结果】'];
+  m.income.forEach(function (it) { L.push(it.label + '：' + it.value); });
+  m.cut.forEach(function (it) { L.push(it.label + '：' + it.value); });
+  L.push('年度应纳个税：' + m.due);
+  L.push('平时已预缴：' + m.prepaid);
+  L.push('汇算结果：' + m.diffText);
+  L.push('（测算工具 · 仅供参考，以税务机关口径为准）');
+  return L.join('\n');
+}
+
+function todayStr() {
+  var t = new Date();
+  return t.getFullYear() + '-' + ('0' + (t.getMonth() + 1)).slice(-2) + '-' + ('0' + t.getDate()).slice(-2);
+}
+
+// 把结果摘要画成一张图（750px 宽，2 倍像素密度，适合手机和聊天窗口）
+var IMG_FONT = '-apple-system, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif';
+
+function fitFont(g, text, maxW, size, bold) {
+  var s = size;
+  for (var i = 0; i < 24; i++) {
+    g.font = (bold ? 'bold ' : '') + s + 'px ' + IMG_FONT;
+    if (g.measureText(text).width <= maxW || s <= 10) { break; }
+    s -= 1;
+  }
+  return s;
+}
+
+function roundRectPath(g, x, y, w, h, r) {
+  g.beginPath();
+  if (g.roundRect) { g.roundRect(x, y, w, h, r); return; }
+  g.moveTo(x + r, y);
+  g.arcTo(x + w, y, x + w, y + h, r);
+  g.arcTo(x + w, y + h, x, y + h, r);
+  g.arcTo(x, y + h, x, y, r);
+  g.arcTo(x, y, x + w, y, r);
+  g.closePath();
+}
+
+function drawSummaryImage() {
+  var m = summaryModel();
+  if (!m) { return null; }
+  var W = 750, PAD = 46, DPR = 2, ROW = 36, CARD_H = 116;
+  var yTitle = PAD + 34;
+  var ySub = yTitle + 30;
+  var yDiv = ySub + 22;
+  var ySec1 = yDiv + 34;
+  var row1Top = ySec1 + 14;
+  var ySec2 = row1Top + m.income.length * ROW + 26;
+  var row2Top = ySec2 + 14;
+  var cardTop = row2Top + m.cut.length * ROW + 26;
+  var footTop = cardTop + CARD_H + 30;
+  var H = footTop + 76;
+
+  var cv = document.createElement('canvas');
+  cv.width = W * DPR;
+  cv.height = Math.round(H) * DPR;
+  var g = cv.getContext('2d');
+  g.scale(DPR, DPR);
+  g.textBaseline = 'alphabetic';
+
+  // 底色与顶部色条
+  g.fillStyle = '#ffffff';
+  g.fillRect(0, 0, W, H);
+  var grad = g.createLinearGradient(0, 0, W, 0);
+  grad.addColorStop(0, '#667eea');
+  grad.addColorStop(1, '#764ba2');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, W, 6);
+
+  // 标题与副标题
+  g.textAlign = 'left';
+  g.fillStyle = '#111827';
+  g.font = 'bold 34px ' + IMG_FONT;
+  g.fillText('个人所得税测算结果', PAD, yTitle);
+  g.fillStyle = '#9ca3af';
+  g.font = '15px ' + IMG_FONT;
+  g.fillText('生成于 ' + todayStr() + ' · 社保基数口径 2026-10 起', PAD, ySub);
+
+  g.strokeStyle = '#eef0f5';
+  g.lineWidth = 1;
+  g.beginPath();
+  g.moveTo(PAD, yDiv);
+  g.lineTo(W - PAD, yDiv);
+  g.stroke();
+
+  // 小节标题
+  function secLabel(text, base) {
+    g.fillStyle = '#667eea';
+    g.fillRect(PAD, base - 12, 3, 14);
+    g.fillStyle = '#6b7280';
+    g.font = 'bold 13px ' + IMG_FONT;
+    g.textAlign = 'left';
+    g.fillText(text, PAD + 11, base);
+  }
+
+  // 明细行
+  function drawRows(list, top) {
+    for (var i = 0; i < list.length; i++) {
+      var base = top + i * ROW + 24;
+      g.textAlign = 'left';
+      g.fillStyle = '#4b5563';
+      g.font = '15px ' + IMG_FONT;
+      g.fillText(list[i].label, PAD, base);
+
+      g.fillStyle = '#111827';
+      fitFont(g, list[i].value, W - 2 * PAD - 130, 15.5, true);
+      g.textAlign = 'right';
+      g.fillText(list[i].value, W - PAD, base);
+      g.textAlign = 'left';
+
+      if (i < list.length - 1) {
+        g.strokeStyle = '#f2f3f8';
+        g.beginPath();
+        g.moveTo(PAD, top + i * ROW + ROW - 1);
+        g.lineTo(W - PAD, top + i * ROW + ROW - 1);
+        g.stroke();
+      }
+    }
+  }
+
+  secLabel('收入构成', ySec1);
+  drawRows(m.income, row1Top);
+  secLabel('扣除与应纳税所得额', ySec2);
+  drawRows(m.cut, row2Top);
+
+  // 三张指标卡
+  var gap = 12;
+  var cardW = (W - 2 * PAD - gap * 2) / 3;
+  var cards = [
+    { label: '年度应纳个税', value: m.due, tag: '', tone: 'ink' },
+    { label: '平时已预缴', value: m.prepaid, tag: '', tone: 'ink' },
+    { label: '预计退 / 补税', value: m.diffAbs, tag: m.diffTag, tone: m.diffTone }
+  ];
+  for (var c = 0; c < cards.length; c++) {
+    var cd = cards[c];
+    var cx = PAD + c * (cardW + gap);
+    g.fillStyle = cd.tone === 'good' ? '#f0fdf4' : (cd.tone === 'bad' ? '#fef2f2' : '#f8f9fc');
+    g.strokeStyle = cd.tone === 'good' ? '#bbf7d0' : (cd.tone === 'bad' ? '#fecaca' : '#eef0f5');
+    g.lineWidth = 1;
+    roundRectPath(g, cx, cardTop, cardW, CARD_H, 12);
+    g.fill();
+    g.stroke();
+
+    g.textAlign = 'left';
+    g.fillStyle = '#6b7280';
+    g.font = '12.5px ' + IMG_FONT;
+    g.fillText(cd.label, cx + 16, cardTop + 30);
+
+    g.fillStyle = cd.tone === 'good' ? '#047857' : (cd.tone === 'bad' ? '#b91c1c' : '#111827');
+    fitFont(g, cd.value, cardW - 32, 24, true);
+    g.fillText(cd.value, cx + 16, cardTop + 68);
+
+    if (cd.tag) {
+      g.fillStyle = '#6b7280';
+      g.font = '12.5px ' + IMG_FONT;
+      g.fillText(cd.tag, cx + 16, cardTop + 94);
+    }
+  }
+
+  // 页脚
+  g.strokeStyle = '#eef0f5';
+  g.beginPath();
+  g.moveTo(PAD, footTop);
+  g.lineTo(W - PAD, footTop);
+  g.stroke();
+
+  g.textAlign = 'left';
+  g.fillStyle = '#9ca3af';
+  g.font = '13px ' + IMG_FONT;
+  g.fillText('由「个税小工具」生成 · 全部在本机浏览器计算，工资数据不上传', PAD, footTop + 28);
+  g.font = '12.5px ' + IMG_FONT;
+  g.fillText('结果仅供参考，最终以税务机关口径为准 · v2.0（政策口径 2026-11-20）', PAD, footTop + 52);
+
+  return cv;
+}
+
+// 图片写入剪贴板：必须在点击手势内同步调用 write，图片用 Promise 形式给 Safari / Firefox 认
+function copyImageNow(cv) {
+  if (!navigator.clipboard || !navigator.clipboard.write || typeof window.ClipboardItem === 'undefined') {
+    return Promise.reject(new Error('NO_API'));
+  }
+  try {
+    var item = new ClipboardItem({
+      'image/png': new Promise(function (resolve, reject) {
+        cv.toBlob(function (b) { b ? resolve(b) : reject(new Error('BLOB_FAIL')); }, 'image/png');
+      })
+    });
+    return navigator.clipboard.write([item]);
+  } catch (e) {
+    return Promise.reject(e);
+  }
+}
+
+// 把失败原因翻成人话，直接显示在弹层里，方便判断是浏览器限制还是权限问题
+function clipReason(err) {
+  var name = (err && err.name) || '';
+  var msg = (err && err.message) || '';
+  if (name === 'NO_API' || msg === 'NO_API') { return '这个浏览器不支持网页写图片到剪贴板'; }
+  if (name === 'NotAllowedError') {
+    return location.protocol === 'file:'
+      ? '以本地文件方式打开时，浏览器禁止网页写剪贴板'
+      : '浏览器拒绝了剪贴板写入（可能需要在地址栏允许剪贴板权限）';
+  }
+  if (name === 'SecurityError') { return '浏览器出于安全策略禁止了剪贴板写入'; }
+  if (msg === 'BLOB_FAIL') { return '图片生成失败'; }
+  return name ? ('剪贴板写入失败：' + name) : '剪贴板写入失败';
+}
+
+window.__drawSummaryImage = drawSummaryImage;
+
+function copyText(text) {
+  function legacy() {
+    return new Promise(function (resolve, reject) {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+      document.body.removeChild(ta);
+      ok ? resolve() : reject(new Error('copy failed'));
+    });
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    return navigator.clipboard.writeText(text).catch(function () { return legacy(); });
+  }
+  return legacy();
+}
+
+(function () {
+  var btn = document.getElementById('copyBtn');
+  var textBtn = document.getElementById('copyTextBtn');
+  var hint = document.getElementById('copyHint');
+  var fb = document.getElementById('copyFallback');
+  var mask = document.getElementById('shotMask');
+  var shotImg = document.getElementById('shotImg');
+  var shotDl = document.getElementById('shotDl');
+  var shotRetry = document.getElementById('shotRetry');
+  var shotCopy = document.getElementById('shotCopy');
+  var shotClose = document.getElementById('shotClose');
+  var shotHint = document.getElementById('shotHint');
+  var DEF_HINT = '算完可存成一张图，直接发群里或发给 HR';
+  var lastShot = null;
+  if (!btn) { return; }
+
+  if (hint) { hint.textContent = DEF_HINT; }
+
+  function resetImgBtn() {
+    btn.textContent = '复制结果图片';
+    btn.className = 'btn-copy';
+    if (hint) { hint.textContent = DEF_HINT; }
+  }
+
+  function flashImg(msg) {
+    btn.textContent = msg;
+    btn.className = 'btn-copy done';
+    if (hint) { hint.textContent = '图片已复制到剪贴板，可直接粘贴到聊天窗口或文档里'; }
+    setTimeout(resetImgBtn, 2200);
+  }
+
+  function openShot(cv, reason) {
+    lastShot = cv;
+    var url = cv.toDataURL('image/png');
+    if (shotImg) { shotImg.src = url; }
+    if (shotDl) {
+      shotDl.href = url;
+      shotDl.download = '个税测算结果-' + todayStr() + '.png';
+    }
+    if (shotHint) {
+      shotHint.textContent = (reason ? ('自动复制没成功：' + reason + '。') : '')
+        + '点「复制图片」再试一次，或右键图片选「复制图片」，也可以点「保存图片」；手机上长按图片保存。';
+    }
+    if (mask) { mask.className = 'shot-mask on'; }
+    if (hint) { hint.textContent = '图片已生成，在下方弹层里复制或保存' + (reason ? '（' + reason + '）' : ''); }
+  }
+
+  // 弹层里用选区 + execCommand 复制已经渲染好的图片，绕开剪贴板 API 的权限限制
+  function copyFromPanelImg() {
+    return new Promise(function (resolve, reject) {
+      var im = shotImg;
+      if (!im || !im.src) { reject(new Error('NO_IMG')); return; }
+      if (!im.complete || !im.naturalWidth) { reject(new Error('IMG_LOADING')); return; }
+      var sel = window.getSelection();
+      try {
+        var range = document.createRange();
+        range.selectNode(im);
+        sel.removeAllRanges();
+        sel.addRange(range);
+        var ok = false;
+        try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+        sel.removeAllRanges();
+        ok ? resolve() : reject(new Error('EXEC_FAIL'));
+      } catch (e) {
+        try { sel.removeAllRanges(); } catch (e2) { }
+        reject(e);
+      }
+    });
+  }
+
+  function closeShot() {
+    if (mask) { mask.className = 'shot-mask'; }
+  }
+
+  // 主按钮：一键把结果存成图片
+  btn.addEventListener('click', function () {
+    var cv = drawSummaryImage();
+    if (!cv) { return; }
+    copyImageNow(cv).then(function () {
+      closeShot();
+      flashImg('已复制图片 ✓');
+    }).catch(function (err) {
+      openShot(cv, clipReason(err));
+    });
+  });
+
+  // 次按钮：保留原来的文字复制，方便贴给 HR 或填表
+  function copySummaryText() {
+    var text = buildSummary();
+    if (!text) { return; }
+    copyText(text).then(function () {
+      if (fb) { fb.style.display = 'none'; }
+      textBtn.textContent = '已复制 ✓';
+      textBtn.className = 'btn-copy done';
+      if (hint) { hint.textContent = '文字已复制到剪贴板，可直接粘贴'; }
+      setTimeout(function () {
+        textBtn.textContent = '复制文字';
+        textBtn.className = 'btn-ghost';
+        if (hint) { hint.textContent = DEF_HINT; }
+      }, 1800);
+    }).catch(function () {
+      textBtn.textContent = '请手动复制';
+      textBtn.className = 'btn-ghost';
+      if (hint) { hint.textContent = '浏览器不允许自动复制，已选中下方文字，按 Ctrl+C（Mac 用 ⌘C）即可'; }
+      if (fb) {
+        fb.value = text;
+        fb.style.display = 'block';
+        fb.focus();
+        fb.select();
+        try { fb.setSelectionRange(0, fb.value.length); } catch (e) { }
+      }
+      setTimeout(function () {
+        textBtn.textContent = '复制文字';
+        textBtn.className = 'btn-ghost';
+      }, 2200);
+    });
+  }
+  if (textBtn) { textBtn.addEventListener('click', copySummaryText); }
+
+  // 弹层：复制图片（选区 + execCommand）/ 再试一次自动复制 / 关闭
+  if (shotCopy) {
+    shotCopy.addEventListener('click', function () {
+      copyFromPanelImg().then(function () {
+        if (shotHint) { shotHint.textContent = '已复制图片，粘贴试试；如果粘贴出来不是图片，就点「保存图片」再用。'; }
+      }).catch(function (err) {
+        var m = (err && err.message) || '';
+        if (shotHint) {
+          shotHint.textContent = m === 'EXEC_FAIL'
+            ? '这个浏览器不允许脚本复制图片，请点「保存图片」，或用鼠标右键点图片选「复制图片」。'
+            : '图片还没加载完，稍等一下再点「复制图片」。';
+        }
+      });
+    });
+  }
+  if (shotRetry) {
+    shotRetry.addEventListener('click', function () {
+      if (!lastShot) { return; }
+      copyImageNow(lastShot).then(function () {
+        closeShot();
+        flashImg('已复制图片 ✓');
+      }).catch(function (err) {
+        if (shotHint) {
+          shotHint.textContent = '还是不行：' + clipReason(err) + '。请点「复制图片」或「保存图片」。';
+        }
+      });
+    });
+  }
+  if (shotClose) { shotClose.addEventListener('click', closeShot); }
+  if (mask) {
+    mask.addEventListener('click', function (e) {
+      if (e.target === mask) { closeShot(); }
+    });
+  }
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { closeShot(); }
+  });
+
+  window.__copySummaryText = copySummaryText;
+})();
+
+applyUrlParams();
+refresh();
+</script>
+</body>
+</html>
