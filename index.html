@@ -514,6 +514,11 @@ function clamp(v, lo, hi) {
   return v;
 }
 
+// 四舍五入到分：加 1e-9 避开 0.005 边界上的二进制误差（481.315 应为 481.32，而不是 481.31）
+function r2(x) {
+  return Math.round((x + 1e-9) * 100) / 100;
+}
+
 function updateSocial() {
   var region = sel('region');
   var ssEl = document.getElementById('ssMonth');
@@ -563,7 +568,7 @@ function updateSocial() {
   var medical = mBase * medRate;
   var unemp = uBase * cfg.unempRate;
   var other = Math.max(0, val('otherIns'));
-  var total = pension + medical + unemp + other;
+  var total = r2(pension + medical + unemp + other);
 
   ssEl.value = total.toFixed(2);
 
@@ -592,7 +597,7 @@ function updateHF() {
   if (!(rate > 0)) { rate = 0; }
 
   if (base > 0 && rate > 0) {
-    var m = base * rate / 100;
+    var m = r2(base * rate / 100);
     monthEl.value = m.toFixed(2);
     monthEl.readOnly = true;
     if (hintEl) { hintEl.textContent = '基数×比例自动计算'; }
