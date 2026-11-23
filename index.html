@@ -854,7 +854,8 @@ function compute() {
   else if (elderlyType === 'not') { elderly = Math.min(Math.max(0, val('elderlyAmt')), 1500); }
 
   var addMonthly = childCount * 2000 + infantCount * 2000 + eduMonthly + loan + rent + elderly;
-  var addYear = addMonthly * 12 + medicalDeduction;
+  // 专项附加扣除同样按实际工资发放月数计；大病医疗是汇算按实际支出扣，不折月
+  var addYear = addMonthly * months + medicalDeduction;
 
   var ssYear = ssMonth * months;
   var hfYear = hfMonth * months;
@@ -965,7 +966,7 @@ function render(d) {
   var ssTotal = d.ssMonth + d.hfMonth;
   setText('dedSsSum', ssTotal > 0.005 ? money(ssTotal) + '/月' : '未填');
   setText('dedOtherSum', d.pension > 0.005 ? money(d.pension) + '/年' : '未填');
-  var addMed = d.addYear - d.addMonthly * 12;
+  var addMed = d.addYear - d.addMonthly * d.months;
   setText('dedAddSum', d.addMonthly > 0.005
     ? money(d.addMonthly) + '/月' + (addMed > 0.005 ? '＋大病 ' + money(addMed) : '')
     : (addMed > 0.005 ? '大病 ' + money(addMed) : '未填'));
@@ -1030,7 +1031,13 @@ function render(d) {
     body.appendChild(addRow('综合所得收入额', money(d.comprehensive)));
     body.appendChild(addRow('减：基本减除费用（5,000 × ' + d.months + ' 个月）', money(d.basicDeduct)));
     body.appendChild(addRow('减：专项扣除（社保＋公积金）', money(d.ssYear + d.hfYear)));
-    body.appendChild(addRow('减：专项附加扣除', money(d.addYear)));
+    var addLabel = '减：专项附加扣除';
+    var addParts = [];
+    if (d.addMonthly > 0.005) { addParts.push(money(d.addMonthly) + ' × ' + d.months + ' 个月'); }
+    var addMedAmt = d.addYear - d.addMonthly * d.months;
+    if (addMedAmt > 0.005) { addParts.push('大病 ' + money(addMedAmt)); }
+    if (addParts.length) { addLabel += '（' + addParts.join('，') + '）'; }
+    body.appendChild(addRow(addLabel, money(d.addYear)));
     body.appendChild(addRow('减：个人养老金等其他扣除', money(d.pension)));
     body.appendChild(addRow('应纳税所得额', money(d.taxable)));
     var rateText = d.annualBracket ? (Math.round(d.annualBracket.rate * 10000) / 100) + '%' : '—';
