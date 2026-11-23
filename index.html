@@ -169,6 +169,13 @@ table.tbl th.r{text-align:right}
         <select id="region">
           <option value="huizhou" selected>惠州市</option>
           <option value="shenzhen">深圳市</option>
+          <option value="guangzhou">广州市</option>
+          <option value="foshan">佛山市</option>
+          <option value="dongguan">东莞市</option>
+          <option value="zhongshan">中山市</option>
+          <option value="zhuhai">珠海市</option>
+          <option value="jiangmen">江门市</option>
+          <option value="zhaoqing">肇庆市</option>
           <option value="manual">手动填写</option>
         </select>
       </div>
@@ -504,6 +511,104 @@ var REGION_DATA = {
     unempMin: 2700,
     unempMax: 48471,
     note: '深圳口径，基数统一按 2026 年 10 月起执行：养老 8%（基数 5,521–27,603）、医疗一档 2%／二档 0.5%（基数 6,727–33,633）、失业 0.2%（基数 2,700–48,471）、工伤与生育个人不缴。深户强制一档，非深户可选一档或二档；深户单位另缴 1% 地方补充养老，个人不承担。'
+  },
+  guangzhou: {
+    name: '广州市',
+    effective: '2026年10月起执行',
+    pensionRate: 0.08,
+    pensionMin: 5521,
+    pensionMax: 27603,
+    medicalRate: 0.02,
+    medicalMin: 6234,
+    medicalMax: 31170,
+    unempRate: 0.002,
+    unempMin: 2680,
+    unempMax: 42933,
+    note: '广州口径（企业职工），基数统一按 2026 年 10 月起执行：养老 8%（5,521–27,603，省统一）、医疗 2%（6,234–31,170）、失业 0.2%（2,680–42,933）、工伤与生育个人不缴。'
+  },
+  foshan: {
+    name: '佛山市',
+    effective: '2026年10月起执行',
+    pensionRate: 0.08,
+    pensionMin: 5521,
+    pensionMax: 27603,
+    medicalRate: 0.02,
+    medicalMin: 4669,
+    medicalMax: 9660,
+    unempRate: 0.002,
+    unempMin: 2300,
+    unempMax: 31395,
+    note: '佛山口径（企业职工），基数统一按 2026 年 10 月起执行：养老 8%（5,521–27,603，省统一）、医疗 2%（4,669–9,660）、失业 0.2%（2,300–31,395）、工伤与生育个人不缴。'
+  },
+  dongguan: {
+    name: '东莞市',
+    effective: '2026年10月起执行',
+    pensionRate: 0.08,
+    pensionMin: 5521,
+    pensionMax: 27603,
+    medicalRate: 0.02,
+    medicalMin: 4775,
+    medicalMax: 27549,
+    unempRate: 0.002,
+    unempMin: 2080,
+    unempMax: 27702,
+    note: '东莞口径（企业职工），基数统一按 2026 年 10 月起执行：养老 8%（5,521–27,603，省统一）、医疗 2%（4,775–27,549）、失业 0.2%（2,080–27,702）、工伤与生育个人不缴。'
+  },
+  zhongshan: {
+    name: '中山市',
+    effective: '2026年10月起执行',
+    pensionRate: 0.08,
+    pensionMin: 5521,
+    pensionMax: 27603,
+    medicalRate: 0.02,
+    medicalMin: 4250,
+    medicalMax: 21150,
+    unempRate: 0.002,
+    unempMin: 2300,
+    unempMax: 29430,
+    note: '中山口径（企业职工），基数统一按 2026 年 10 月起执行：养老 8%（5,521–27,603，省统一）、医疗 2%（4,250–21,150）、失业 0.2%（2,300–29,430）、工伤与生育个人不缴。'
+  },
+  zhuhai: {
+    name: '珠海市',
+    effective: '2026年10月起执行',
+    pensionRate: 0.08,
+    pensionMin: 5521,
+    pensionMax: 27603,
+    medicalRate: 0.02,
+    medicalMin: 4775,
+    medicalMax: 27549,
+    unempRate: 0.002,
+    unempMin: 2300,
+    unempMax: 36279,
+    note: '珠海口径（企业职工），基数统一按 2026 年 10 月起执行：养老 8%（5,521–27,603，省统一）、医疗 2%（4,775–27,549）、失业 0.2%（2,300–36,279）、工伤与生育个人不缴。'
+  },
+  jiangmen: {
+    name: '江门市',
+    effective: '2026年10月起执行',
+    pensionRate: 0.08,
+    pensionMin: 5521,
+    pensionMax: 27603,
+    medicalRate: 0.02,
+    medicalMin: 4280,
+    medicalMax: 21399,
+    unempRate: 0.002,
+    unempMin: 2040,
+    unempMax: 27627,
+    note: '江门口径（企业职工），基数统一按 2026 年 10 月起执行：养老 8%（5,521–27,603，省统一）、医疗 2%（4,280–21,399）、失业 0.2%（2,040–27,627）、工伤与生育个人不缴。'
+  },
+  zhaoqing: {
+    name: '肇庆市',
+    effective: '2026年10月起执行',
+    pensionRate: 0.08,
+    pensionMin: 5521,
+    pensionMax: 27603,
+    medicalRate: 0.02,
+    medicalMin: 4520,
+    medicalMax: 22599,
+    unempRate: 0.002,
+    unempMin: 1850,
+    unempMax: 28220,
+    note: '肇庆口径（企业职工），基数统一按 2026 年 10 月起执行：养老 8%（5,521–27,603，省统一）、医疗 2%（4,520–22,599）、失业 0.2%（1,850–28,220）、工伤与生育个人不缴。'
   }
 };
 
@@ -973,10 +1078,9 @@ function syncUI() {
     elderlyAmt.style.display = sel('elderlyType') === 'not' ? 'block' : 'none';
   }
   var region = sel('region');
-  var isHz = region === 'huizhou';
-  var isSz = region === 'shenzhen';
-  var auto = isHz || isSz;
-  setDisplay('fgMedTier', isSz);
+  var rcfg = REGION_DATA[region];
+  var auto = !!rcfg;
+  setDisplay('fgMedTier', !!(rcfg && rcfg.medicalTiers));
   setDisplay('fgStd', auto);
   setDisplay('fgSswage', auto);
   setDisplay('fgOtherIns', auto);
