@@ -211,12 +211,12 @@ table.tbl th.r{text-align:right}
         <label for="otherIns">其他个人缴费（元/月）<span class="h">补充医疗、大病等</span></label>
         <input type="text" id="otherIns" value="0" autocomplete="off">
       </div>
-      <div class="fg">
+      <div class="fg" id="fgHfbase">
         <label for="hfBase">公积金缴费基数（元/月）<span class="h">按本人上年月均工资，各市有上限</span></label>
         <input type="text" id="hfBase" value="0" autocomplete="off">
         <div class="sub" id="hfBreakdown">填基数后自动算个人部分</div>
       </div>
-      <div class="fg">
+      <div class="fg" id="fgHfrate">
         <label for="hfRate">公积金个人比例<span class="h">5%–12%，单位同比例</span></label>
         <select id="hfRate">
           <option value="0">不填</option>
@@ -654,12 +654,13 @@ function updateSocial() {
   if (!ssEl) { return; }
 
   var actual = dedIsActual();
-  // 按实际填写时金额自己填；按月预算时按基数算并置灰
+  // 按实际填写时金额自己填，基数字段全部收起；按月预算时按基数算并置灰
   ssEl.readOnly = !actual && region !== 'manual';
-  if (hint) {
-    hint.textContent = actual ? '手填实际扣除，改基数不覆盖'
-      : (region === 'manual' ? '直接填金额' : '按基数自动算');
+  if (actual) {
+    if (hint) { hint.textContent = '手填月缴额，按发放月数累计'; }
+    return;
   }
+  if (hint) { hint.textContent = region === 'manual' ? '直接填金额' : '按基数自动算'; }
 
   if (region === 'manual') {
     if (bd) { bd.textContent = '手动模式：直接录入社保个人月缴额；填了缴费基数与社平工资会校验 60%–300%。'; }
@@ -682,12 +683,8 @@ function updateSocial() {
   var wage = Math.max(0, val('ssWage'));
 
   if (wage <= 0) {
-    if (!actual && document.activeElement !== ssEl) { ssEl.value = '0.00'; }
-    if (bd) {
-      bd.textContent = actual
-        ? '按实际填写：直接录入社保个人月缴额；填缴费工资可交叉校验'
-        : '填入社保缴费工资后自动计算';
-    }
+    if (document.activeElement !== ssEl) { ssEl.value = '0.00'; }
+    if (bd) { bd.textContent = '填入社保缴费工资后自动计算'; }
     return;
   }
 
@@ -700,7 +697,7 @@ function updateSocial() {
   var other = Math.max(0, val('otherIns'));
   var total = r2(pension + medical + unemp + other);
 
-  if (!actual && document.activeElement !== ssEl) { ssEl.value = total.toFixed(2); }
+  if (document.activeElement !== ssEl) { ssEl.value = total.toFixed(2); }
 
   if (bd) {
     var medPct = (medRate * 100).toFixed(medRate * 100 % 1 === 0 ? 0 : 1);
@@ -711,12 +708,7 @@ function updateSocial() {
     if (pBase !== wage || uBase !== wage || mBase !== wage) {
       txt += '（缴费工资已按上下限调整）';
     }
-    if (actual) {
-      txt += '；按基数应为 ' + total.toFixed(2) + '，实际填 ' + money(Math.max(0, val('ssMonth'))) + '，以实际为准';
-    } else {
-      txt += '；合计 ' + total.toFixed(2) + ' 元/月';
-    }
-    bd.textContent = txt;
+    bd.textContent = txt + '；合计 ' + total.toFixed(2) + ' 元/月';
   }
 }
 
@@ -729,29 +721,26 @@ function updateHF() {
 
   var actual = dedIsActual();
   monthEl.readOnly = !actual;
+  if (actual) {
+    if (hintEl) { hintEl.textContent = '手填月缴额，按发放月数累计'; }
+    return;
+  }
   var base = Math.max(0, val('hfBase'));
   var rate = Number(sel('hfRate'));
   if (!(rate > 0)) { rate = 0; }
 
   if (base > 0 && rate > 0) {
     var m = r2(base * rate / 100);
-    if (!actual && document.activeElement !== monthEl) { monthEl.value = m.toFixed(2); }
-    if (hintEl) { hintEl.textContent = actual ? '手填实际扣除，改基数不覆盖' : '基数×比例自动算'; }
+    if (document.activeElement !== monthEl) { monthEl.value = m.toFixed(2); }
+    if (hintEl) { hintEl.textContent = '基数×比例自动算'; }
     if (bd) {
-      if (actual) {
-        bd.textContent = '基数 ' + th(base) + ' × ' + rate + '% 应为 ' + m.toFixed(2) +
-          '，实际填 ' + money(Math.max(0, val('hfMonth'))) + ' 元/月，以实际为准';
-      } else {
-        bd.textContent = '基数 ' + th(base) + ' × ' + rate + '% ＝ ' + m.toFixed(2) +
-          ' 元/月（年 ' + (m * 12).toFixed(2) + '，单位同比例另缴）';
-      }
+      bd.textContent = '基数 ' + th(base) + ' × ' + rate + '% ＝ ' + m.toFixed(2) +
+        ' 元/月（年 ' + (m * 12).toFixed(2) + '，单位同比例另缴）';
     }
   } else {
-    if (hintEl) { hintEl.textContent = actual ? '手填实际扣除' : '基数为 0 时可手填'; }
+    if (hintEl) { hintEl.textContent = '基数为 0 时可手填'; }
     if (bd) {
-      bd.textContent = actual
-        ? '按实际填写：直接录入公积金个人月缴额'
-        : (base > 0 ? '请选择个人比例（5%–12%）' : '填基数后自动算个人部分，也可填金额');
+      bd.textContent = base > 0 ? '请选择个人比例（5%–12%）' : '填基数后自动算个人部分，也可填金额';
     }
   }
 }
@@ -1127,7 +1116,8 @@ function syncUI() {
   var region = sel('region');
   var rcfg = REGION_DATA[region];
   var auto = !!rcfg;
-  setDisplay('fgMedTier', !!(rcfg && rcfg.medicalTiers));
+  var deductActual = dedIsActual();
+  setDisplay('fgMedTier', !!(rcfg && rcfg.medicalTiers) && !deductActual);
 
   // 医保档次文案随地区变：深圳叫一档/二档，东莞中山叫统账结合/单建统筹
   var medSel = document.getElementById('medTier');
@@ -1140,14 +1130,17 @@ function syncUI() {
     }
     if (medHint) { medHint.textContent = (region === 'shenzhen') ? '深户强制一档' : '按单位参保类型选'; }
   }
-  setDisplay('fgStd', auto);
-  setDisplay('fgSswage', auto);
-  setDisplay('fgOtherIns', auto);
+  setDisplay('fgStd', auto && !deductActual);
+  setDisplay('fgSswage', auto && !deductActual);
+  setDisplay('fgOtherIns', auto && !deductActual);
   setDisplay('fgDedMode', auto);
+  // 按实际填写时只留两个金额框，基数和比例全部收起
+  setDisplay('fgHfbase', !deductActual);
+  setDisplay('fgHfrate', !deductActual);
   var dmHint = document.getElementById('dedModeHint');
   if (dmHint) {
-    dmHint.textContent = dedIsActual()
-      ? '社保、公积金个人部分按你填的金额算，改基数不会覆盖'
+    dmHint.textContent = deductActual
+      ? '只填社保、公积金个人月缴额，系统按发放月数累计'
       : '按缴费基数 × 费率自动算社保、公积金个人月缴额';
   }
   setDisplay('fgSsbase', !auto);
