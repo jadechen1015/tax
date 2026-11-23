@@ -199,8 +199,8 @@ table.tbl th.r{text-align:right}
         <div class="sub" id="dedModeHint">按缴费基数自动算社保、公积金个人月缴额</div>
       </div>
       <div class="fg" id="fgDedSum">
-        <label for="ssHfMonth">累计专项扣除（社保＋公积金）（元/月）<span class="h" id="ssHfHint">手填，按发放月数累计</span></label>
-        <input type="text" id="ssHfMonth" value="0" autocomplete="off">
+        <label for="ssHfYear">累计专项扣除（社保＋公积金）（元/年）<span class="h" id="ssHfHint">手填全年累计数，不再乘月数</span></label>
+        <input type="text" id="ssHfYear" value="0" autocomplete="off">
       </div>
       <div class="fg" id="fgSswage">
         <label for="ssWage">社保缴费工资（元/月）<span class="h">按本人工资申报，自动套用上下限</span></label>
@@ -841,9 +841,10 @@ function compute() {
   }
 
   // ---- 专项扣除 ----
-  // 按实际填写时只填一个「累计专项扣除」合计月缴额，社保、公积金不再分栏
+  // 按实际填写：只填社保＋公积金的全年累计扣除额，不再乘发放月数
   var dedActualNow = dedIsActual();
-  var ssMonth = dedActualNow ? Math.max(0, val('ssHfMonth')) : Math.max(0, val('ssMonth'));
+  var dedAnnual = dedActualNow ? Math.max(0, val('ssHfYear')) : 0;
+  var ssMonth = dedActualNow ? (months > 0 ? dedAnnual / months : 0) : Math.max(0, val('ssMonth'));
   var hfMonth = dedActualNow ? 0 : Math.max(0, val('hfMonth'));
   var ssBase = Math.max(0, val('ssBase'));
   var avgWage = Math.max(0, val('avgWage'));
@@ -880,8 +881,8 @@ function compute() {
   // 专项附加扣除同样按实际工资发放月数计；大病医疗是汇算按实际支出扣，不折月
   var addYear = addMonthly * months + medicalDeduction;
 
-  var ssYear = ssMonth * months;
-  var hfYear = hfMonth * months;
+  var ssYear = dedActualNow ? dedAnnual : ssMonth * months;
+  var hfYear = dedActualNow ? 0 : hfMonth * months;
 
   // ---- 劳务报酬口径 ----
   var perTimeIncl = times > 0 ? labor / times : 0;
@@ -964,6 +965,7 @@ function compute() {
   render({
     wage: wage, labor: labor, months: months, times: times, bonus: bonus,
     bonusMethod: bonusMethod, ssMonth: ssMonth, hfMonth: hfMonth,
+    dedMode: dedActualNow ? 'actual' : 'budget',
     ssYear: ssYear, hfYear: hfYear, addMonthly: addMonthly, addYear: addYear,
     medicalDeduction: medicalDeduction, medicalTotal: medicalTotal, medicalOwner: medicalOwner,
     pension: pension, ssBase: ssBase, avgWage: avgWage,
@@ -987,7 +989,11 @@ function render(d) {
   window.__lastResult = d;
   // 折叠栏摘要：收起后仍能看到已填金额
   var ssTotal = d.ssMonth + d.hfMonth;
-  setText('dedSsSum', ssTotal > 0.005 ? money(ssTotal) + '/月' : '未填');
+  if (d.dedMode === 'actual') {
+    setText('dedSsSum', (d.ssYear + d.hfYear) > 0.005 ? money(d.ssYear + d.hfYear) + '/年' : '未填');
+  } else {
+    setText('dedSsSum', ssTotal > 0.005 ? money(ssTotal) + '/月' : '未填');
+  }
   setText('dedOtherSum', d.pension > 0.005 ? money(d.pension) + '/年' : '未填');
   var addMed = d.addYear - d.addMonthly * d.months;
   setText('dedAddSum', d.addMonthly > 0.005
@@ -1182,15 +1188,18 @@ function refresh() {
   compute();
 }
 
-// 切到「按实际填写」时，把按月预算算出来的社保＋公积金合计填进合计框当起点
+// 切到「按实际填写」时，把按月预算算出来的社保＋公积金全年合计填进累计框当起点
 (function () {
   var dm = document.getElementById('dedMode');
   if (!dm) { return; }
   dm.addEventListener('change', function () {
     if (!dedIsActual()) { return; }
-    var box = document.getElementById('ssHfMonth');
-    if (!box || val('ssHfMonth') > 0) { return; }
-    var sum = Math.max(0, val('ssMonth')) + Math.max(0, val('hfMonth'));
+    var box = document.getElementById('ssHfYear');
+    if (!box || val('ssHfYear') > 0) { return; }
+    var months = Math.round(val('wageMonths'));
+    if (!(months > 0)) { months = 12; }
+    if (months > 12) { months = 12; }
+    var sum = (Math.max(0, val('ssMonth')) + Math.max(0, val('hfMonth'))) * months;
     if (sum > 0) { box.value = sum.toFixed(2); }
   });
 })();
@@ -1240,7 +1249,7 @@ var PARAM_ALIAS = {
   pensionyear: 'pensionYear', housingtype: 'housingType', elderlytype: 'elderlyType',
   costinvoice: 'costInvoice', otherins: 'otherIns', hfmonth: 'hfMonth',
   ssm: 'ssMonth', ssmonth: 'ssMonth', hfm: 'hfMonth',
-  dedmode: 'dedMode', dedsum: 'ssHfMonth', sshf: 'ssHfMonth', sshfmonth: 'ssHfMonth',
+  dedmode: 'dedMode', dedsum: 'ssHfYear', dedyear: 'ssHfYear', sshf: 'ssHfYear', sshfyear: 'ssHfYear',
   ssbase: 'ssBase', avgwage: 'avgWage', medtier: 'medTier',
   medicalowner: 'medicalOwner', region: 'region'
 };
