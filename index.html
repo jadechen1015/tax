@@ -184,7 +184,7 @@ table.tbl th.r{text-align:right}
         <div class="sub" id="stdText">2026年10月起执行</div>
       </div>
       <div class="fg" id="fgMedTier">
-        <label for="medTier">医保档次<span class="h">深户强制一档</span></label>
+        <label for="medTier">医保档次<span class="h" id="medTierHint">深户强制一档</span></label>
         <select id="medTier">
           <option value="t1" selected>一档（个人 2%）</option>
           <option value="t2">二档（个人 0.5%）</option>
@@ -507,6 +507,7 @@ var REGION_DATA = {
     medicalMin: 6727,
     medicalMax: 33633,
     medicalTiers: { t1: 0.02, t2: 0.005 },
+    tierNames: { t1: '一档', t2: '二档' },
     unempRate: 0.002,
     unempMin: 2700,
     unempMax: 48471,
@@ -546,13 +547,14 @@ var REGION_DATA = {
     pensionRate: 0.08,
     pensionMin: 5521,
     pensionMax: 27603,
-    medicalRate: 0.02,
     medicalMin: 4775,
     medicalMax: 27549,
+    medicalTiers: { t1: 0.02, t2: 0.005 },
+    tierNames: { t1: '统账结合', t2: '单建统筹' },
     unempRate: 0.002,
     unempMin: 2080,
     unempMax: 27702,
-    note: '东莞口径（企业职工），基数统一按 2026 年 10 月起执行：养老 8%（5,521–27,603，省统一）、医疗 2%（4,775–27,549）、失业 0.2%（2,080–27,702）、工伤与生育个人不缴。'
+    note: '东莞口径（企业职工），基数统一按 2026 年 10 月起执行：养老 8%（5,521–27,603，省统一）、医疗统账结合 2%／单建统筹 0.5%（基数 4,775–27,549）、失业 0.2%（2,080–27,702）、工伤与生育个人不缴。两档共用同一组基数区间。'
   },
   zhongshan: {
     name: '中山市',
@@ -560,13 +562,14 @@ var REGION_DATA = {
     pensionRate: 0.08,
     pensionMin: 5521,
     pensionMax: 27603,
-    medicalRate: 0.02,
-    medicalMin: 4250,
-    medicalMax: 21150,
+    medicalMin: 4520,
+    medicalMax: 21250,
+    medicalTiers: { t1: 0.02, t2: 0.007 },
+    tierNames: { t1: '统账结合', t2: '单建统筹' },
     unempRate: 0.002,
     unempMin: 2300,
     unempMax: 29430,
-    note: '中山口径（企业职工），基数统一按 2026 年 10 月起执行：养老 8%（5,521–27,603，省统一）、医疗 2%（4,250–21,150）、失业 0.2%（2,300–29,430）、工伤与生育个人不缴。'
+    note: '中山口径（企业职工），基数统一按 2026 年 10 月起执行：养老 8%（5,521–27,603，省统一）、医疗统账结合 2%／单建统筹 0.7%（基数 4,520–21,250）、失业 0.2%（2,300–29,430）、工伤与生育个人不缴。两档共用同一组基数区间。'
   },
   zhuhai: {
     name: '珠海市',
@@ -622,6 +625,12 @@ function clamp(v, lo, hi) {
 // 四舍五入到分：加 1e-9 避开 0.005 边界上的二进制误差（481.315 应为 481.32，而不是 481.31）
 function r2(x) {
   return Math.round((x + 1e-9) * 100) / 100;
+}
+
+// 费率转文本：0.02→2%、0.005→0.5%、0.025→2.5%
+function pctText(r) {
+  var v = Math.round((r || 0) * 1000) / 10;
+  return (v % 1 === 0 ? v.toFixed(0) : v.toFixed(1)) + '%';
 }
 
 function updateSocial() {
@@ -1081,6 +1090,18 @@ function syncUI() {
   var rcfg = REGION_DATA[region];
   var auto = !!rcfg;
   setDisplay('fgMedTier', !!(rcfg && rcfg.medicalTiers));
+
+  // 医保档次文案随地区变：深圳叫一档/二档，东莞中山叫统账结合/单建统筹
+  var medSel = document.getElementById('medTier');
+  var medHint = document.getElementById('medTierHint');
+  if (rcfg && rcfg.medicalTiers) {
+    var names = rcfg.tierNames || { t1: '一档', t2: '二档' };
+    if (medSel && medSel.options.length >= 2) {
+      medSel.options[0].textContent = names.t1 + '（个人 ' + pctText(rcfg.medicalTiers.t1) + '）';
+      medSel.options[1].textContent = names.t2 + '（个人 ' + pctText(rcfg.medicalTiers.t2) + '）';
+    }
+    if (medHint) { medHint.textContent = (region === 'shenzhen') ? '深户强制一档' : '按单位参保类型选'; }
+  }
   setDisplay('fgStd', auto);
   setDisplay('fgSswage', auto);
   setDisplay('fgOtherIns', auto);
