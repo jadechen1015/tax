@@ -198,12 +198,16 @@ table.tbl th.r{text-align:right}
         </select>
         <div class="sub" id="dedModeHint">按缴费基数自动算社保、公积金个人月缴额</div>
       </div>
+      <div class="fg" id="fgDedSum">
+        <label for="ssHfMonth">累计专项扣除（社保＋公积金）（元/月）<span class="h" id="ssHfHint">手填，按发放月数累计</span></label>
+        <input type="text" id="ssHfMonth" value="0" autocomplete="off">
+      </div>
       <div class="fg" id="fgSswage">
         <label for="ssWage">社保缴费工资（元/月）<span class="h">按本人工资申报，自动套用上下限</span></label>
         <input type="text" id="ssWage" value="0" autocomplete="off">
         <div class="sub" id="ssBreakdown">养老 — ；失业 —</div>
       </div>
-      <div class="fg">
+      <div class="fg" id="fgSsmonth">
         <label for="ssMonth">社保个人部分（元/月）<span class="h" id="ssMonthHint">可直接填金额</span></label>
         <input type="text" id="ssMonth" value="0" autocomplete="off">
       </div>
@@ -230,7 +234,7 @@ table.tbl th.r{text-align:right}
           <option value="12">12%</option>
         </select>
       </div>
-      <div class="fg">
+      <div class="fg" id="fgHfmonth">
         <label for="hfMonth">公积金个人部分（元/月）<span class="h" id="hfMonthHint">可直接填金额</span></label>
         <input type="text" id="hfMonth" value="0" autocomplete="off">
       </div>
@@ -837,8 +841,10 @@ function compute() {
   }
 
   // ---- 专项扣除 ----
-  var ssMonth = Math.max(0, val('ssMonth'));
-  var hfMonth = Math.max(0, val('hfMonth'));
+  // 按实际填写时只填一个「累计专项扣除」合计月缴额，社保、公积金不再分栏
+  var dedActualNow = dedIsActual();
+  var ssMonth = dedActualNow ? Math.max(0, val('ssHfMonth')) : Math.max(0, val('ssMonth'));
+  var hfMonth = dedActualNow ? 0 : Math.max(0, val('hfMonth'));
   var ssBase = Math.max(0, val('ssBase'));
   var avgWage = Math.max(0, val('avgWage'));
   var pension = Math.min(Math.max(0, val('pensionYear')), 12000);
@@ -1134,13 +1140,16 @@ function syncUI() {
   setDisplay('fgSswage', auto && !deductActual);
   setDisplay('fgOtherIns', auto && !deductActual);
   setDisplay('fgDedMode', auto);
-  // 按实际填写时只留两个金额框，基数和比例全部收起
+  // 按实际填写时只留一个「累计专项扣除」框，社保、公积金各自那两行收起
   setDisplay('fgHfbase', !deductActual);
   setDisplay('fgHfrate', !deductActual);
+  setDisplay('fgSsmonth', !deductActual);
+  setDisplay('fgHfmonth', !deductActual);
+  setDisplay('fgDedSum', deductActual);
   var dmHint = document.getElementById('dedModeHint');
   if (dmHint) {
     dmHint.textContent = deductActual
-      ? '只填社保、公积金个人月缴额，系统按发放月数累计'
+      ? '只填社保＋公积金合计月缴额，系统按发放月数累计'
       : '按缴费基数 × 费率自动算社保、公积金个人月缴额';
   }
   setDisplay('fgSsbase', !auto);
@@ -1172,6 +1181,19 @@ function refresh() {
   updateHF();
   compute();
 }
+
+// 切到「按实际填写」时，把按月预算算出来的社保＋公积金合计填进合计框当起点
+(function () {
+  var dm = document.getElementById('dedMode');
+  if (!dm) { return; }
+  dm.addEventListener('change', function () {
+    if (!dedIsActual()) { return; }
+    var box = document.getElementById('ssHfMonth');
+    if (!box || val('ssHfMonth') > 0) { return; }
+    var sum = Math.max(0, val('ssMonth')) + Math.max(0, val('hfMonth'));
+    if (sum > 0) { box.value = sum.toFixed(2); }
+  });
+})();
 
 var all = document.querySelectorAll('input, select');
 for (var k = 0; k < all.length; k++) {
@@ -1218,7 +1240,7 @@ var PARAM_ALIAS = {
   pensionyear: 'pensionYear', housingtype: 'housingType', elderlytype: 'elderlyType',
   costinvoice: 'costInvoice', otherins: 'otherIns', hfmonth: 'hfMonth',
   ssm: 'ssMonth', ssmonth: 'ssMonth', hfm: 'hfMonth',
-  dedmode: 'dedMode',
+  dedmode: 'dedMode', dedsum: 'ssHfMonth', sshf: 'ssHfMonth', sshfmonth: 'ssHfMonth',
   ssbase: 'ssBase', avgwage: 'avgWage', medtier: 'medTier',
   medicalowner: 'medicalOwner', region: 'region'
 };
