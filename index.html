@@ -870,7 +870,9 @@ function compute() {
   // ---- 年度综合所得 ----
   var comprehensive = wage + laborIncomeAmount;
   if (hasBonus && bonusMethod === 'combined') { comprehensive += bonus; }
-  var taxable = Math.max(0, comprehensive - 60000 - ssYear - hfYear - addYear - pension);
+  // 基本减除费用按实际工资发放月数计：5,000 元/月，不固定按 12 个月
+  var basicDeduct = 5000 * months;
+  var taxable = Math.max(0, comprehensive - basicDeduct - ssYear - hfYear - addYear - pension);
   var annualResult = taxFrom(COMP_TABLE, taxable);
   var annualTax = annualResult.tax;
 
@@ -942,7 +944,8 @@ function compute() {
     medicalDeduction: medicalDeduction, medicalTotal: medicalTotal, medicalOwner: medicalOwner,
     pension: pension, ssBase: ssBase, avgWage: avgWage,
     laborNet: laborNet, vat: vat, surtax: surtax, vatExempt: vatExempt,
-    laborIncomeAmount: laborIncomeAmount, comprehensive: comprehensive, taxable: taxable,
+    laborIncomeAmount: laborIncomeAmount, comprehensive: comprehensive,
+    basicDeduct: basicDeduct, taxable: taxable,
     annualTax: annualTax, annualBracket: annualResult.bracket, bonusTax: bonusTax,
     bonusBracket: bonusBracket, prepaidWage: prepaidWage, prepaidLabor: prepaidLabor,
     perTimeTax: perTimeTax, laborWhTaxable: laborWhTaxable,
@@ -1025,7 +1028,7 @@ function render(d) {
     body.appendChild(addRow('劳务报酬（含税）', money(d.labor)));
     body.appendChild(addRow('劳务报酬收入额（不含税 × 80%）', money(d.laborIncomeAmount)));
     body.appendChild(addRow('综合所得收入额', money(d.comprehensive)));
-    body.appendChild(addRow('减：基本减除费用', money(60000)));
+    body.appendChild(addRow('减：基本减除费用（5,000 × ' + d.months + ' 个月）', money(d.basicDeduct)));
     body.appendChild(addRow('减：专项扣除（社保＋公积金）', money(d.ssYear + d.hfYear)));
     body.appendChild(addRow('减：专项附加扣除', money(d.addYear)));
     body.appendChild(addRow('减：个人养老金等其他扣除', money(d.pension)));
