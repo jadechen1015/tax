@@ -196,8 +196,8 @@ table.tbl th.r{text-align:right}
         <div class="sub" id="ssBreakdown">养老 — ；失业 —</div>
       </div>
       <div class="fg">
-        <label for="ssMonth">社保个人部分（元/月）<span class="h" id="ssMonthHint">惠州模式自动计算</span></label>
-        <input type="text" id="ssMonth" value="0" autocomplete="off" readonly>
+        <label for="ssMonth">社保个人部分（元/月）<span class="h" id="ssMonthHint">可直接填金额</span></label>
+        <input type="text" id="ssMonth" value="0" autocomplete="off">
       </div>
       <div class="fg" id="fgOtherIns">
         <label for="otherIns">其他个人缴费（元/月）<span class="h">补充医疗、大病等</span></label>
@@ -223,7 +223,7 @@ table.tbl th.r{text-align:right}
         </select>
       </div>
       <div class="fg">
-        <label for="hfMonth">公积金个人部分（元/月）<span class="h" id="hfMonthHint">基数为 0 时可手填</span></label>
+        <label for="hfMonth">公积金个人部分（元/月）<span class="h" id="hfMonthHint">可直接填金额</span></label>
         <input type="text" id="hfMonth" value="0" autocomplete="off">
       </div>
       <div class="fg" id="fgSsbase">
@@ -641,21 +641,18 @@ function updateSocial() {
   if (!ssEl) { return; }
 
   if (region === 'manual') {
-    ssEl.readOnly = false;
-    if (hint) { hint.textContent = '手动填写'; }
-    if (bd) { bd.textContent = '已切换为手动填写，请直接录入社保个人月缴额。'; }
+    if (hint) { hint.textContent = manualSS ? '手填金额，清空恢复自动' : '直接填金额'; }
+    if (bd) { bd.textContent = '手动模式：直接录入社保个人月缴额；填了缴费基数与社平工资会校验 60%–300%。'; }
     return;
   }
 
   var cfg = REGION_DATA[region];
   if (!cfg) {
-    ssEl.readOnly = false;
-    if (hint) { hint.textContent = '手动填写'; }
+    if (hint) { hint.textContent = manualSS ? '手填金额，清空恢复自动' : '直接填金额'; }
     return;
   }
 
-  ssEl.readOnly = true;
-  if (hint) { hint.textContent = cfg.name + '自动计算'; }
+  if (hint) { hint.textContent = manualSS ? '手填金额，清空恢复自动' : cfg.name + '自动计算，可改'; }
 
   var pensionMin = cfg.pensionMin;
   var pensionMax = cfg.pensionMax;
@@ -670,8 +667,12 @@ function updateSocial() {
   var wage = Math.max(0, val('ssWage'));
 
   if (wage <= 0) {
-    ssEl.value = '0.00';
-    if (bd) { bd.textContent = '填入社保缴费工资后自动计算'; }
+    if (!manualSS && document.activeElement !== ssEl) { ssEl.value = '0.00'; }
+    if (bd) {
+      bd.textContent = manualSS
+        ? '已手填 ' + money(Math.max(0, val('ssMonth'))) + ' 元/月；填缴费工资可交叉校验'
+        : '填入社保缴费工资后自动计算，也可直接填上面的金额';
+    }
     return;
   }
 
@@ -684,7 +685,7 @@ function updateSocial() {
   var other = Math.max(0, val('otherIns'));
   var total = r2(pension + medical + unemp + other);
 
-  ssEl.value = total.toFixed(2);
+  if (!manualSS && document.activeElement !== ssEl) { ssEl.value = total.toFixed(2); }
 
   if (bd) {
     var medPct = (medRate * 100).toFixed(medRate * 100 % 1 === 0 ? 0 : 1);
@@ -695,7 +696,12 @@ function updateSocial() {
     if (pBase !== wage || uBase !== wage || mBase !== wage) {
       txt += '（缴费工资已按上下限调整）';
     }
-    bd.textContent = txt + '；合计 ' + total.toFixed(2) + ' 元/月';
+    if (manualSS) {
+      txt += '；按基数应为 ' + total.toFixed(2) + '，已手填 ' + money(Math.max(0, val('ssMonth'))) + '，以手填为准';
+    } else {
+      txt += '；合计 ' + total.toFixed(2) + ' 元/月';
+    }
+    bd.textContent = txt;
   }
 }
 
@@ -712,18 +718,21 @@ function updateHF() {
 
   if (base > 0 && rate > 0) {
     var m = r2(base * rate / 100);
-    monthEl.value = m.toFixed(2);
-    monthEl.readOnly = true;
-    if (hintEl) { hintEl.textContent = '基数×比例自动计算'; }
+    if (!manualHF && document.activeElement !== monthEl) { monthEl.value = m.toFixed(2); }
+    if (hintEl) { hintEl.textContent = manualHF ? '手填金额，清空恢复自动' : '基数×比例自动计算，可改'; }
     if (bd) {
-      bd.textContent = '基数 ' + th(base) + ' × ' + rate + '% ＝ ' + m.toFixed(2) +
-        ' 元/月（年 ' + (m * 12).toFixed(2) + '，单位同比例另缴）';
+      if (manualHF) {
+        bd.textContent = '基数 ' + th(base) + ' × ' + rate + '% 应为 ' + m.toFixed(2) +
+          '，已手填 ' + money(Math.max(0, val('hfMonth'))) + ' 元/月，以手填为准';
+      } else {
+        bd.textContent = '基数 ' + th(base) + ' × ' + rate + '% ＝ ' + m.toFixed(2) +
+          ' 元/月（年 ' + (m * 12).toFixed(2) + '，单位同比例另缴）';
+      }
     }
   } else {
-    monthEl.readOnly = false;
-    if (hintEl) { hintEl.textContent = '基数为 0 时可手填'; }
+    if (hintEl) { hintEl.textContent = manualHF ? '手填金额，清空恢复自动' : '基数为 0 时可手填'; }
     if (bd) {
-      bd.textContent = base > 0 ? '请选择个人比例（5%–12%）' : '填基数后自动算个人部分';
+      bd.textContent = base > 0 ? '请选择个人比例（5%–12%）' : '填基数后自动算个人部分，也可直接填金额';
     }
   }
 }
@@ -1145,6 +1154,24 @@ function refresh() {
   compute();
 }
 
+// 社保、公积金个人部分：手填金额后不再被基数重算覆盖；清空即恢复自动
+var manualSS = false;
+var manualHF = false;
+(function () {
+  var ssEl = document.getElementById('ssMonth');
+  var hfEl = document.getElementById('hfMonth');
+  if (ssEl) {
+    ssEl.addEventListener('input', function () {
+      manualSS = String(ssEl.value).trim() !== '';
+    });
+  }
+  if (hfEl) {
+    hfEl.addEventListener('input', function () {
+      manualHF = String(hfEl.value).trim() !== '';
+    });
+  }
+})();
+
 var all = document.querySelectorAll('input, select');
 for (var k = 0; k < all.length; k++) {
   all[k].addEventListener('input', refresh);
@@ -1189,6 +1216,7 @@ var PARAM_ALIAS = {
   childcount: 'childCount', infantcount: 'infantCount', medicaltotal: 'medicalTotal',
   pensionyear: 'pensionYear', housingtype: 'housingType', elderlytype: 'elderlyType',
   costinvoice: 'costInvoice', otherins: 'otherIns', hfmonth: 'hfMonth',
+  ssm: 'ssMonth', ssmonth: 'ssMonth', hfm: 'hfMonth',
   ssbase: 'ssBase', avgwage: 'avgWage', medtier: 'medTier',
   medicalowner: 'medicalOwner', region: 'region'
 };
@@ -1222,6 +1250,9 @@ function applyUrlParams() {
       el.checked = (raw === '1' || raw === 'true' || raw === 'on' || raw === 'yes');
     } else {
       el.value = raw;
+      // 手填金额参数：标记为手填，免得被基数重算覆盖
+      if (id === 'ssMonth' && raw !== '') { manualSS = true; }
+      if (id === 'hfMonth' && raw !== '') { manualHF = true; }
     }
   }
 }
