@@ -643,63 +643,63 @@ var REGION_DATA = {
 };
 
 // 灵活就业：单位＋个人两部分都由自己承担，用「全口径合计」费率；基数区间与职工口径相同
-// 医保可选：职工医保（统账结合，费率较高）或灵活就业医保（单建统筹，费率较低）
+// 医保可选：灵活就业医保（统账结合，费率较高）或灵活就业医保（单建统筹，费率较低）
 var FLEX_DATA = {
   huizhou: {
     pension: 0.20,
     medical: { t1: 0.071, t2: 0.035 },
-    medicalNames: { t1: '职工医保（统账结合）', t2: '灵活就业医保（单建统筹）' },
+    medicalNames: { t1: '灵活就业医保（统账结合）', t2: '灵活就业医保（单建统筹）' },
     unemp: 0.01
   },
   shenzhen: {
     pension: 0.20,
     pensionLocal: 0.21,
     medical: { t1: 0.08 },
-    medicalNames: { t1: '职工医保（一档）' },
+    medicalNames: { t1: '灵活就业医保（一档）' },
     unemp: 0.01
   },
   guangzhou: {
     pension: 0.20,
     medical: { t1: 0.08 },
-    medicalNames: { t1: '职工医保' },
+    medicalNames: { t1: '灵活就业医保' },
     unemp: 0.01
   },
   foshan: {
     pension: 0.20,
     medical: { t1: 0.065, t2: 0.045 },
-    medicalNames: { t1: '职工医保（统账结合）', t2: '灵活就业医保（单建统筹）' },
+    medicalNames: { t1: '灵活就业医保（统账结合）', t2: '灵活就业医保（单建统筹）' },
     unemp: 0.01
   },
   dongguan: {
     pension: 0.20,
     medical: { t1: 0.07, t1b: 0.05, t2: 0.0295 },
-    medicalNames: { t1: '职工医保（统账结合·有个账）', t1b: '职工医保（统账结合·无个账）', t2: '灵活就业医保（单建统筹）' },
+    medicalNames: { t1: '灵活就业医保（统账结合·有个账）', t1b: '灵活就业医保（统账结合·无个账）', t2: '灵活就业医保（单建统筹）' },
     unemp: 0.01,
     unempRange: [2080, 27702]
   },
   zhongshan: {
     pension: 0.20,
     medical: { t1: 0.07, t2: 0.032 },
-    medicalNames: { t1: '职工医保（统账结合）', t2: '灵活就业医保（单建统筹）' },
+    medicalNames: { t1: '灵活就业医保（统账结合）', t2: '灵活就业医保（单建统筹）' },
     unemp: 0.01,
     unempRange: [2300, 29430]
   },
   zhuhai: {
     pension: 0.20,
     medical: { t1: 0.07, t2: 0.025 },
-    medicalNames: { t1: '职工医保（统账结合）', t2: '灵活就业医保（单建统筹）' },
+    medicalNames: { t1: '灵活就业医保（统账结合）', t2: '灵活就业医保（单建统筹）' },
     unemp: 0.01
   },
   jiangmen: {
     pension: 0.20,
     medical: { t1: 0.075 },
-    medicalNames: { t1: '职工医保' },
+    medicalNames: { t1: '灵活就业医保' },
     unemp: 0.01
   },
   zhaoqing: {
     pension: 0.20,
     medical: { t1: 0.075 },
-    medicalNames: { t1: '职工医保' },
+    medicalNames: { t1: '灵活就业医保' },
     unemp: 0.01
   }
 };
@@ -1319,7 +1319,7 @@ function syncUI() {
   }
   if (medHint) {
     if (flex) {
-      medHint.textContent = tiers.length >= 2 ? '职工医保或灵活就业医保' : '该市只给了一档费率';
+      medHint.textContent = tiers.length >= 2 ? '统账结合或单建统筹' : '该市只给了一档费率';
     } else {
       medHint.textContent = (region === 'shenzhen') ? '深户强制一档' : '按单位参保类型选';
     }
