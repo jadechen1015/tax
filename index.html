@@ -1155,7 +1155,7 @@ function syncUI() {
   var dmHint = document.getElementById('dedModeHint');
   if (dmHint) {
     dmHint.textContent = deductActual
-      ? '只填社保＋公积金合计月缴额，系统按发放月数累计'
+      ? '只填社保＋公积金全年累计扣除额，直接用、不再乘月数'
       : '按缴费基数 × 费率自动算社保、公积金个人月缴额';
   }
   setDisplay('fgSsbase', !auto);
