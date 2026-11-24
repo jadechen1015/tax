@@ -126,11 +126,11 @@ table.tbl th.r{text-align:right}
     <div class="grid">
       <div class="fg">
         <label for="wageYear">全年工资薪金（元）<span class="h">税前，已扣社保公积金前</span></label>
-        <input type="text" id="wageYear" value="0" autocomplete="off">
+        <input type="text" id="wageYear" value="" placeholder="0" autocomplete="off">
       </div>
       <div class="fg">
         <label for="laborYear">全年劳务报酬（元）<span class="h">含税金额，全年合计</span></label>
-        <input type="text" id="laborYear" value="0" autocomplete="off">
+        <input type="text" id="laborYear" value="" placeholder="0" autocomplete="off">
       </div>
       <div class="fg">
         <label for="wageMonths">工资发放月数<span class="h">默认12；年中入职/离职按实际月数</span></label>
@@ -143,7 +143,7 @@ table.tbl th.r{text-align:right}
       <div class="fg">
         <label class="row-check"><input type="checkbox" id="bonusToggle"> 有全年一次性奖金</label>
         <div id="bonusBox" style="display:none">
-          <input type="text" id="bonusAmount" value="0" autocomplete="off" style="margin-bottom:8px">
+          <input type="text" id="bonusAmount" value="" placeholder="0" autocomplete="off" style="margin-bottom:8px">
           <label class="row-check"><input type="radio" name="bonusMethod" value="separate" checked> 单独计税</label>
           <label class="row-check"><input type="radio" name="bonusMethod" value="combined"> 并入综合所得</label>
         </div>
@@ -200,24 +200,24 @@ table.tbl th.r{text-align:right}
       </div>
       <div class="fg" id="fgDedSum">
         <label for="ssHfYear">累计专项扣除（社保＋公积金）（元/年）<span class="h" id="ssHfHint">手填全年累计数，不再乘月数</span></label>
-        <input type="text" id="ssHfYear" value="0" autocomplete="off">
+        <input type="text" id="ssHfYear" value="" placeholder="0" autocomplete="off">
       </div>
       <div class="fg" id="fgSswage">
         <label for="ssWage">社保缴费工资（元/月）<span class="h">按本人工资申报，自动套用上下限</span></label>
-        <input type="text" id="ssWage" value="0" autocomplete="off">
+        <input type="text" id="ssWage" value="" placeholder="0" autocomplete="off">
         <div class="sub" id="ssBreakdown">养老 — ；失业 —</div>
       </div>
       <div class="fg" id="fgSsmonth">
         <label for="ssMonth">社保个人部分（元/月）<span class="h" id="ssMonthHint">可直接填金额</span></label>
-        <input type="text" id="ssMonth" value="0" autocomplete="off">
+        <input type="text" id="ssMonth" value="" placeholder="0" autocomplete="off">
       </div>
       <div class="fg" id="fgOtherIns">
         <label for="otherIns">其他个人缴费（元/月）<span class="h">补充医疗、大病等</span></label>
-        <input type="text" id="otherIns" value="0" autocomplete="off">
+        <input type="text" id="otherIns" value="" placeholder="0" autocomplete="off">
       </div>
       <div class="fg" id="fgHfbase">
         <label for="hfBase">公积金缴费基数（元/月）<span class="h">按本人上年月均工资，各市有上限</span></label>
-        <input type="text" id="hfBase" value="0" autocomplete="off">
+        <input type="text" id="hfBase" value="" placeholder="0" autocomplete="off">
         <div class="sub" id="hfBreakdown">填基数后自动算个人部分</div>
       </div>
       <div class="fg" id="fgHfrate">
@@ -236,15 +236,15 @@ table.tbl th.r{text-align:right}
       </div>
       <div class="fg" id="fgHfmonth">
         <label for="hfMonth">公积金个人部分（元/月）<span class="h" id="hfMonthHint">可直接填金额</span></label>
-        <input type="text" id="hfMonth" value="0" autocomplete="off">
+        <input type="text" id="hfMonth" value="" placeholder="0" autocomplete="off">
       </div>
       <div class="fg" id="fgSsbase">
         <label for="ssBase">社保缴费基数（元/月）<span class="h">手动模式可选，用于 60%–300% 校验</span></label>
-        <input type="text" id="ssBase" value="0" autocomplete="off">
+        <input type="text" id="ssBase" value="" placeholder="0" autocomplete="off">
       </div>
       <div class="fg" id="fgAvgwage">
         <label for="avgWage">当地社平月工资（元）<span class="h">手动模式可选</span></label>
-        <input type="text" id="avgWage" value="0" autocomplete="off">
+        <input type="text" id="avgWage" value="" placeholder="0" autocomplete="off">
       </div>
     </div>
     <div class="sub" id="regionNote">惠州口径（企业职工），基数统一按 2026 年 10 月起执行：养老 8%（基数 5,521–27,603）、医疗（统账结合）2%（基数 4,463–22,315）、失业 0.2%（基数 2,040–28,710）、工伤与生育个人不缴，个人合计 10.2%。手动填写模式可自行录入。</div>
@@ -258,7 +258,7 @@ table.tbl th.r{text-align:right}
     <div class="grid">
       <div class="fg">
         <label for="pensionYear">个人养老金（元/年）<span class="h">最高 12,000 元</span></label>
-        <input type="text" id="pensionYear" value="0" autocomplete="off">
+        <input type="text" id="pensionYear" value="" placeholder="0" autocomplete="off">
       </div>
     </div>
     </div>
@@ -285,7 +285,7 @@ table.tbl th.r{text-align:right}
       </div>
       <div class="fg">
         <label for="medicalTotal">大病医疗自付累计（元/年）<span class="h">医保目录内，超 1.5 万部分，限额 8 万</span></label>
-        <input type="text" id="medicalTotal" value="0" autocomplete="off" style="margin-bottom:8px">
+        <input type="text" id="medicalTotal" value="" placeholder="0" autocomplete="off" style="margin-bottom:8px">
         <select id="medicalOwner">
           <option value="self">由本人扣除</option>
           <option value="spouse">由配偶扣除（本人不扣）</option>
@@ -310,7 +310,7 @@ table.tbl th.r{text-align:right}
           <option value="only">独生子女 3,000 元/月</option>
           <option value="not">非独生子女（分摊）</option>
         </select>
-        <input type="text" id="elderlyAmt" value="0" autocomplete="off" placeholder="每月分摊额，不超过 1,500 元" style="display:none;margin-top:8px">
+        <input type="text" id="elderlyAmt" value="" autocomplete="off" placeholder="每月分摊额，不超过 1,500 元" style="display:none;margin-top:8px">
         <div class="sub">非独生子女与兄弟姐妹分摊，每人每月不超过 1,500 元。</div>
       </div>
     </div>
@@ -371,7 +371,7 @@ table.tbl th.r{text-align:right}
     <div class="grid" style="margin-bottom:16px">
       <div class="fg">
         <label for="costInvoice">个体户模式：成本费用及发票金额（元/年）</label>
-        <input type="text" id="costInvoice" value="0" autocomplete="off">
+        <input type="text" id="costInvoice" value="" placeholder="0" autocomplete="off">
       </div>
       <div class="fg">
         <label>说明</label>
@@ -687,7 +687,7 @@ function updateSocial() {
   var wage = Math.max(0, val('ssWage'));
 
   if (wage <= 0) {
-    if (document.activeElement !== ssEl) { ssEl.value = '0.00'; }
+    if (document.activeElement !== ssEl) { ssEl.value = ''; }
     if (bd) { bd.textContent = '填入社保缴费工资后自动计算'; }
     return;
   }
