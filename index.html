@@ -179,6 +179,21 @@ table.tbl th.r{text-align:right}
           <option value="manual">手动填写</option>
         </select>
       </div>
+      <div class="fg" id="fgIdentity">
+        <label for="identity">参保身份<span class="h">决定社保由谁承担</span></label>
+        <select id="identity">
+          <option value="employee" selected>企业职工（只扣个人部分）</option>
+          <option value="flex">灵活就业（全额自缴）</option>
+        </select>
+        <div class="sub" id="identityHint">个人只缴养老 8%、医疗 2%、失业 0.2%</div>
+      </div>
+      <div class="fg" id="fgHukou">
+        <label for="hukou">深圳户籍<span class="h">深户养老 21%、非深户 20%</span></label>
+        <select id="hukou">
+          <option value="non_local" selected>非深户（养老 20%）</option>
+          <option value="local">深户（养老 21%）</option>
+        </select>
+      </div>
       <div class="fg" id="fgStd">
         <label>基数执行标准<span class="h">统一按 2026 年 10 月起</span></label>
         <div class="sub" id="stdText">2026年10月起执行</div>
@@ -627,6 +642,66 @@ var REGION_DATA = {
   }
 };
 
+// 灵活就业：单位＋个人两部分都由自己承担，用「全口径合计」费率；基数区间与职工口径相同
+// 医保可选：职工医保（统账结合，费率较高）或灵活就业医保（单建统筹，费率较低）
+var FLEX_DATA = {
+  huizhou: {
+    pension: 0.20,
+    medical: { t1: 0.071, t2: 0.035 },
+    medicalNames: { t1: '职工医保（统账结合）', t2: '灵活就业医保（单建统筹）' },
+    unemp: 0.01
+  },
+  shenzhen: {
+    pension: 0.20,
+    pensionLocal: 0.21,
+    medical: { t1: 0.08 },
+    medicalNames: { t1: '职工医保（一档）' },
+    unemp: 0.01
+  },
+  guangzhou: {
+    pension: 0.20,
+    medical: { t1: 0.08 },
+    medicalNames: { t1: '职工医保' },
+    unemp: 0.01
+  },
+  foshan: {
+    pension: 0.20,
+    medical: { t1: 0.065, t2: 0.045 },
+    medicalNames: { t1: '职工医保（统账结合）', t2: '灵活就业医保（单建统筹）' },
+    unemp: 0.01
+  },
+  dongguan: {
+    pension: 0.20,
+    medical: { t1: 0.07, t1b: 0.05, t2: 0.0295 },
+    medicalNames: { t1: '职工医保（统账结合·有个账）', t1b: '职工医保（统账结合·无个账）', t2: '灵活就业医保（单建统筹）' },
+    unemp: 0.01
+  },
+  zhongshan: {
+    pension: 0.20,
+    medical: { t1: 0.07, t2: 0.032 },
+    medicalNames: { t1: '职工医保（统账结合）', t2: '灵活就业医保（单建统筹）' },
+    unemp: 0.01
+  },
+  zhuhai: {
+    pension: 0.20,
+    medical: { t1: 0.07, t2: 0.025 },
+    medicalNames: { t1: '职工医保（统账结合）', t2: '灵活就业医保（单建统筹）' },
+    unemp: 0.01
+  },
+  jiangmen: {
+    pension: 0.20,
+    medical: { t1: 0.075 },
+    medicalNames: { t1: '职工医保' },
+    unemp: 0.01
+  },
+  zhaoqing: {
+    pension: 0.20,
+    medical: { t1: 0.075 },
+    medicalNames: { t1: '职工医保' },
+    unemp: 0.01
+  }
+};
+
 function clamp(v, lo, hi) {
   if (!(v > 0)) { return 0; }
   if (v < lo) { return lo; }
@@ -639,15 +714,76 @@ function r2(x) {
   return Math.round((x + 1e-9) * 100) / 100;
 }
 
-// 费率转文本：0.02→2%、0.005→0.5%、0.025→2.5%
+// 费率转文本：0.02→2%、0.005→0.5%、0.071→7.1%、0.0295→2.95%
 function pctText(r) {
-  var v = Math.round((r || 0) * 1000) / 10;
-  return (v % 1 === 0 ? v.toFixed(0) : v.toFixed(1)) + '%';
+  var v = Math.round((r || 0) * 10000) / 100;
+  if (v === Math.round(v)) { return v.toFixed(0) + '%'; }
+  if (Math.round(v * 10) === v * 10) { return v.toFixed(1) + '%'; }
+  return v.toFixed(2) + '%';
 }
 
 // 专项扣除方式：budget＝按月预算（按基数算），actual＝按实际填写（手填金额）
 function dedIsActual() {
   return sel('dedMode') === 'actual';
+}
+
+// 参保身份：employee＝企业职工（只缴个人部分），flex＝灵活就业（全额自缴）
+function isFlex() {
+  return sel('identity') === 'flex';
+}
+
+// 当前地区 + 身份下的医保档位清单（供下拉使用），无档位时返回空数组
+function medTierList(region, flex) {
+  var out = [];
+  if (region === 'manual') { return out; }
+  if (flex) {
+    var fl = FLEX_DATA[region];
+    if (!fl) { return out; }
+    var names = fl.medicalNames || {};
+    for (var k in fl.medical) {
+      if (!Object.prototype.hasOwnProperty.call(fl.medical, k)) { continue; }
+      out.push({ key: k, label: names[k] || k, rate: fl.medical[k] });
+    }
+    return out;
+  }
+  var cfg = REGION_DATA[region];
+  if (!cfg || !cfg.medicalTiers) { return out; }
+  var tn = cfg.tierNames || {};
+  for (var t in cfg.medicalTiers) {
+    if (!Object.prototype.hasOwnProperty.call(cfg.medicalTiers, t)) { continue; }
+    out.push({ key: t, label: tn[t] || t, rate: cfg.medicalTiers[t] });
+  }
+  return out;
+}
+
+// 当前社保费率：身份决定用职工个人费率还是灵活就业全口径费率
+function socialRates(region) {
+  var cfg = REGION_DATA[region];
+  if (!cfg) { return null; }
+  var flex = isFlex() && !!FLEX_DATA[region];
+  var fl = FLEX_DATA[region];
+  var tier = sel('medTier');
+  var pRate, mRate, uRate, medName = '';
+  if (flex) {
+    pRate = (sel('hukou') === 'local' && fl.pensionLocal) ? fl.pensionLocal : fl.pension;
+    var keys = Object.keys(fl.medical);
+    if (keys.indexOf(tier) < 0) { tier = keys[0]; }
+    mRate = fl.medical[tier];
+    medName = (fl.medicalNames || {})[tier] || tier;
+    uRate = fl.unemp;
+  } else {
+    pRate = cfg.pensionRate;
+    if (cfg.medicalTiers) {
+      var tk = Object.keys(cfg.medicalTiers);
+      if (tk.indexOf(tier) < 0) { tier = tk[0]; }
+      mRate = cfg.medicalTiers[tier];
+      medName = (cfg.tierNames || {})[tier] || tier;
+    } else {
+      mRate = cfg.medicalRate;
+    }
+    uRate = cfg.unempRate;
+  }
+  return { flex: flex, tier: tier, pRate: pRate, mRate: mRate, uRate: uRate, medName: medName };
 }
 
 function updateSocial() {
@@ -664,25 +800,17 @@ function updateSocial() {
     if (hint) { hint.textContent = '手填月缴额，按发放月数累计'; }
     return;
   }
-  if (hint) { hint.textContent = region === 'manual' ? '直接填金额' : '按基数自动算'; }
 
   if (region === 'manual') {
+    if (hint) { hint.textContent = '直接填金额'; }
     if (bd) { bd.textContent = '手动模式：直接录入社保个人月缴额；填了缴费基数与社平工资会校验 60%–300%。'; }
     return;
   }
 
   var cfg = REGION_DATA[region];
-  if (!cfg) { return; }
-
-  var pensionMin = cfg.pensionMin;
-  var pensionMax = cfg.pensionMax;
-  var unempMin = cfg.unempMin;
-  var unempMax = cfg.unempMax;
-  var medRate = cfg.medicalRate;
-  if (cfg.medicalTiers) {
-    var tier = sel('medTier');
-    if (cfg.medicalTiers[tier]) { medRate = cfg.medicalTiers[tier]; }
-  }
+  var rt = socialRates(region);
+  if (!cfg || !rt) { return; }
+  if (hint) { hint.textContent = rt.flex ? '按基数自动算（灵活就业全额）' : '按基数自动算'; }
 
   var wage = Math.max(0, val('ssWage'));
 
@@ -692,22 +820,21 @@ function updateSocial() {
     return;
   }
 
-  var pBase = clamp(wage, pensionMin, pensionMax);
-  var uBase = clamp(wage, unempMin, unempMax);
+  var pBase = clamp(wage, cfg.pensionMin, cfg.pensionMax);
+  var uBase = clamp(wage, cfg.unempMin, cfg.unempMax);
   var mBase = clamp(wage, cfg.medicalMin, cfg.medicalMax);
-  var pension = pBase * cfg.pensionRate;
-  var medical = mBase * medRate;
-  var unemp = uBase * cfg.unempRate;
+  var pension = pBase * rt.pRate;
+  var medical = mBase * rt.mRate;
+  var unemp = uBase * rt.uRate;
   var other = Math.max(0, val('otherIns'));
   var total = r2(pension + medical + unemp + other);
 
   if (document.activeElement !== ssEl) { ssEl.value = total.toFixed(2); }
 
   if (bd) {
-    var medPct = (medRate * 100).toFixed(medRate * 100 % 1 === 0 ? 0 : 1);
-    var txt = '养老 ' + Math.round(pBase) + '×8%＝' + pension.toFixed(2) +
-              '；医疗 ' + Math.round(mBase) + '×' + medPct + '%＝' + medical.toFixed(2) +
-              '；失业 ' + Math.round(uBase) + '×0.2%＝' + unemp.toFixed(2);
+    var txt = '养老 ' + Math.round(pBase) + '×' + pctText(rt.pRate) + '＝' + pension.toFixed(2) +
+              '；医疗 ' + Math.round(mBase) + '×' + pctText(rt.mRate) + '＝' + medical.toFixed(2) +
+              '；失业 ' + Math.round(uBase) + '×' + pctText(rt.uRate) + '＝' + unemp.toFixed(2);
     if (other > 0) { txt += '；其他 ' + other.toFixed(2); }
     if (pBase !== wage || uBase !== wage || mBase !== wage) {
       txt += '（缴费工资已按上下限调整）';
@@ -1134,19 +1261,58 @@ function syncUI() {
   var rcfg = REGION_DATA[region];
   var auto = !!rcfg;
   var deductActual = dedIsActual();
-  setDisplay('fgMedTier', !!(rcfg && rcfg.medicalTiers) && !deductActual);
+  var flex = isFlex() && !!FLEX_DATA[region];
 
-  // 医保档次文案随地区变：深圳叫一档/二档，东莞中山叫统账结合/单建统筹
+  // 参保身份、深圳户籍只在按月预算时出现
+  setDisplay('fgIdentity', auto && !deductActual);
+  setDisplay('fgHukou', auto && flex && region === 'shenzhen' && !deductActual);
+  var idHint = document.getElementById('identityHint');
+  if (idHint) {
+    idHint.textContent = flex
+      ? '单位＋个人两部分都由自己承担，费率按全口径合计'
+      : '个人只缴养老 8%、医疗 2%、失业 0.2%';
+  }
+
+  // 医保档位随地区与身份重建：职工用个人费率，灵活就业用全口径费率
   var medSel = document.getElementById('medTier');
   var medHint = document.getElementById('medTierHint');
-  if (rcfg && rcfg.medicalTiers) {
-    var names = rcfg.tierNames || { t1: '一档', t2: '二档' };
-    if (medSel && medSel.options.length >= 2) {
-      medSel.options[0].textContent = names.t1 + '（个人 ' + pctText(rcfg.medicalTiers.t1) + '）';
-      medSel.options[1].textContent = names.t2 + '（个人 ' + pctText(rcfg.medicalTiers.t2) + '）';
+  var tiers = medTierList(region, flex);
+  if (medSel) {
+    var keep = medSel.value;
+    medSel.innerHTML = '';
+    for (var ti = 0; ti < tiers.length; ti++) {
+      var op = document.createElement('option');
+      op.value = tiers[ti].key;
+      op.textContent = flex
+        ? (tiers[ti].label + ' ' + pctText(tiers[ti].rate))
+        : (tiers[ti].label + '（个人 ' + pctText(tiers[ti].rate) + '）');
+      medSel.appendChild(op);
     }
-    if (medHint) { medHint.textContent = (region === 'shenzhen') ? '深户强制一档' : '按单位参保类型选'; }
+    var stillThere = false;
+    for (var tj = 0; tj < medSel.options.length; tj++) {
+      if (medSel.options[tj].value === keep) { stillThere = true; }
+    }
+    medSel.value = stillThere && medSel.options.length ? keep : (tiers.length ? tiers[0].key : 't1');
+    // 套用 URL 里先到、但当时还没有对应选项的档位
+    if (window.__deferredSelect && window.__deferredSelect.medTier) {
+      var wantTier = window.__deferredSelect.medTier;
+      for (var tw = 0; tw < medSel.options.length; tw++) {
+        if (medSel.options[tw].value === wantTier) {
+          medSel.value = wantTier;
+          delete window.__deferredSelect.medTier;
+          break;
+        }
+      }
+    }
   }
+  if (medHint) {
+    if (flex) {
+      medHint.textContent = tiers.length >= 2 ? '职工医保或灵活就业医保' : '该市只给了一档费率';
+    } else {
+      medHint.textContent = (region === 'shenzhen') ? '深户强制一档' : '按单位参保类型选';
+    }
+  }
+  setDisplay('fgMedTier', tiers.length >= 2 && !deductActual);
   setDisplay('fgStd', auto && !deductActual);
   setDisplay('fgSswage', auto && !deductActual);
   setDisplay('fgOtherIns', auto && !deductActual);
@@ -1179,7 +1345,21 @@ function syncUI() {
   var noteEl = document.getElementById('regionNote');
   if (noteEl) {
     if (auto && REGION_DATA[region]) {
-      noteEl.textContent = REGION_DATA[region].note;
+      var c2 = REGION_DATA[region];
+      var rt2 = socialRates(region);
+      if (flex && rt2) {
+        var mtxt = [];
+        for (var mi = 0; mi < tiers.length; mi++) {
+          mtxt.push(tiers[mi].label + ' ' + pctText(tiers[mi].rate));
+        }
+        noteEl.textContent = (c2.name || '') + '·灵活就业，单位＋个人两部分全部由个人承担，基数统一按 2026 年 10 月起：'
+          + '养老 ' + pctText(rt2.pRate) + '（' + th(c2.pensionMin) + '–' + th(c2.pensionMax) + '）、'
+          + '医疗 ' + mtxt.join('／') + '（' + th(c2.medicalMin) + '–' + th(c2.medicalMax) + '）、'
+          + '失业 ' + pctText(rt2.uRate) + '（' + th(c2.unempMin) + '–' + th(c2.unempMax) + '），'
+          + '合计费率 ' + pctText(rt2.pRate + rt2.mRate + rt2.uRate) + '。工伤、生育不缴。';
+      } else {
+        noteEl.textContent = c2.note;
+      }
     } else {
       noteEl.textContent = '手动填写模式：请直接录入社保个人月缴额；如填了缴费基数与当地社平工资，会校验 60%–300% 区间。';
     }
@@ -1256,6 +1436,7 @@ var PARAM_ALIAS = {
   ssm: 'ssMonth', ssmonth: 'ssMonth', hfm: 'hfMonth',
   dedmode: 'dedMode', dedsum: 'ssHfYear', dedyear: 'ssHfYear', sshf: 'ssHfYear', sshfyear: 'ssHfYear',
   ssbase: 'ssBase', avgwage: 'avgWage', medtier: 'medTier',
+  identity: 'identity', hukou: 'hukou',
   medicalowner: 'medicalOwner', region: 'region'
 };
 
@@ -1288,6 +1469,11 @@ function applyUrlParams() {
       el.checked = (raw === '1' || raw === 'true' || raw === 'on' || raw === 'yes');
     } else {
       el.value = raw;
+      // 下拉选项是运行时按地区重建的（如医保档位），此刻还可能没有这一项，先记下来等重建后再套用
+      if (el.tagName === 'SELECT' && el.value !== raw) {
+        window.__deferredSelect = window.__deferredSelect || {};
+        window.__deferredSelect[id] = raw;
+      }
     }
   }
 }
