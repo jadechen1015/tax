@@ -999,12 +999,17 @@ function render(d) {
   setText('dedAddSum', d.addMonthly > 0.005
     ? money(d.addMonthly) + '/月' + (addMed > 0.005 ? '＋大病 ' + money(addMed) : '')
     : (addMed > 0.005 ? '大病 ' + money(addMed) : '未填'));
-  setText('deductSum', '扣除合计 ' + money(d.ssYear + d.hfYear + d.addYear + d.pension) + '/年');
-  setText('kAnnual', money(d.totalDue));
-  setText('kPrepaid', money(d.prepaidTotal));
+  // 没填任何收入时不显示 0，留空或 --
+  var hasIncome = d.wage > 0 || d.labor > 0 || d.bonus > 0;
+  setText('deductSum', hasIncome ? ('扣除合计 ' + money(d.ssYear + d.hfYear + d.addYear + d.pension) + '/年') : '');
+  setText('kAnnual', hasIncome ? money(d.totalDue) : '--');
+  setText('kPrepaid', hasIncome ? money(d.prepaidTotal) : '--');
   var diffEl = document.getElementById('kDiff');
   if (diffEl) {
-    if (d.diff > 0.005) {
+    if (!hasIncome) {
+      diffEl.textContent = '--';
+      diffEl.className = 'kpi-value';
+    } else if (d.diff > 0.005) {
       diffEl.textContent = '退税 ' + money(d.diff);
       diffEl.className = 'kpi-value pos';
     } else if (d.diff < -0.005) {
