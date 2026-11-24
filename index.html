@@ -534,7 +534,7 @@ var REGION_DATA = {
     medicalMin: 6727,
     medicalMax: 33633,
     medicalTiers: { t1: 0.02, t2: 0.005 },
-    tierNames: { t1: '一档', t2: '二档' },
+    tierNames: { t1: '职工医保（一档）', t2: '职工医保（二档）' },
     unempRate: 0.002,
     unempMin: 2700,
     unempMax: 48471,
@@ -577,11 +577,11 @@ var REGION_DATA = {
     medicalMin: 4775,
     medicalMax: 27549,
     medicalTiers: { t1: 0.02, t2: 0.005 },
-    tierNames: { t1: '统账结合', t2: '单建统筹' },
+    tierNames: { t1: '职工医保（统账结合）', t2: '职工医保（单建统筹）' },
     unempRate: 0.002,
     unempMin: 2080,
     unempMax: 27702,
-    note: '东莞口径（企业职工），基数统一按 2026 年 10 月起执行：养老 8%（5,521–27,603，省统一）、医疗统账结合 2%／单建统筹 0.5%（基数 4,775–27,549）、失业 0.2%（2,080–27,702）、工伤与生育个人不缴。两档共用同一组基数区间。'
+    note: '东莞口径（企业职工），基数统一按 2026 年 10 月起执行：养老 8%（5,521–27,603，省统一）、医疗 职工医保（统账结合）2%／职工医保（单建统筹）0.5%（基数 4,775–27,549）、失业 0.2%（2,080–27,702）、工伤与生育个人不缴。两档共用同一组基数区间。'
   },
   zhongshan: {
     name: '中山市',
@@ -592,11 +592,11 @@ var REGION_DATA = {
     medicalMin: 4520,
     medicalMax: 21250,
     medicalTiers: { t1: 0.02, t2: 0.007 },
-    tierNames: { t1: '统账结合', t2: '单建统筹' },
+    tierNames: { t1: '职工医保（统账结合）', t2: '职工医保（单建统筹）' },
     unempRate: 0.002,
     unempMin: 2300,
     unempMax: 29430,
-    note: '中山口径（企业职工），基数统一按 2026 年 10 月起执行：养老 8%（5,521–27,603，省统一）、医疗统账结合 2%／单建统筹 0.7%（基数 4,520–21,250）、失业 0.2%（2,300–29,430）、工伤与生育个人不缴。两档共用同一组基数区间。'
+    note: '中山口径（企业职工），基数统一按 2026 年 10 月起执行：养老 8%（5,521–27,603，省统一）、医疗 职工医保（统账结合）2%／职工医保（单建统筹）0.7%（基数 4,520–21,250）、失业 0.2%（2,300–29,430）、工伤与生育个人不缴。两档共用同一组基数区间。'
   },
   zhuhai: {
     name: '珠海市',
@@ -1297,7 +1297,7 @@ function syncUI() {
       op.value = tiers[ti].key;
       op.textContent = flex
         ? (tiers[ti].label + ' ' + pctText(tiers[ti].rate))
-        : (tiers[ti].label + '（个人 ' + pctText(tiers[ti].rate) + '）');
+        : (tiers[ti].label + ' ' + pctText(tiers[ti].rate) + '（个人）');
       medSel.appendChild(op);
     }
     var stillThere = false;
