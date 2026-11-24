@@ -674,13 +674,15 @@ var FLEX_DATA = {
     pension: 0.20,
     medical: { t1: 0.07, t1b: 0.05, t2: 0.0295 },
     medicalNames: { t1: '职工医保（统账结合·有个账）', t1b: '职工医保（统账结合·无个账）', t2: '灵活就业医保（单建统筹）' },
-    unemp: 0.01
+    unemp: 0.01,
+    unempRange: [2080, 27702]
   },
   zhongshan: {
     pension: 0.20,
     medical: { t1: 0.07, t2: 0.032 },
     medicalNames: { t1: '职工医保（统账结合）', t2: '灵活就业医保（单建统筹）' },
-    unemp: 0.01
+    unemp: 0.01,
+    unempRange: [2033, 29430]
   },
   zhuhai: {
     pension: 0.20,
@@ -786,6 +788,15 @@ function socialRates(region) {
   return { flex: flex, tier: tier, pRate: pRate, mRate: mRate, uRate: uRate, medName: medName };
 }
 
+// 失业缴费基数区间：灵活就业可单独规定（FLEX_DATA.unempRange），否则沿用职工口径
+function unempRangeOf(region, flex) {
+  var cfg = REGION_DATA[region];
+  if (!cfg) { return [0, 0]; }
+  var fl = FLEX_DATA[region];
+  if (flex && fl && fl.unempRange) { return fl.unempRange; }
+  return [cfg.unempMin, cfg.unempMax];
+}
+
 function updateSocial() {
   var region = sel('region');
   var ssEl = document.getElementById('ssMonth');
@@ -821,7 +832,8 @@ function updateSocial() {
   }
 
   var pBase = clamp(wage, cfg.pensionMin, cfg.pensionMax);
-  var uBase = clamp(wage, cfg.unempMin, cfg.unempMax);
+  var ur = unempRangeOf(region, rt.flex);
+  var uBase = clamp(wage, ur[0], ur[1]);
   var mBase = clamp(wage, cfg.medicalMin, cfg.medicalMax);
   var pension = pBase * rt.pRate;
   var medical = mBase * rt.mRate;
@@ -1335,9 +1347,10 @@ function syncUI() {
   if (stdEl) {
     if (auto && REGION_DATA[region]) {
       var c = REGION_DATA[region];
+      var ur1 = unempRangeOf(region, flex);
       stdEl.textContent = c.effective + '｜养老 ' + th(c.pensionMin) + '–' + th(c.pensionMax) +
         '；医疗 ' + th(c.medicalMin) + '–' + th(c.medicalMax) +
-        '；失业 ' + th(c.unempMin) + '–' + th(c.unempMax);
+        '；失业 ' + th(ur1[0]) + '–' + th(ur1[1]);
     } else {
       stdEl.textContent = '手动填写模式不套用地区标准';
     }
@@ -1347,6 +1360,7 @@ function syncUI() {
     if (auto && REGION_DATA[region]) {
       var c2 = REGION_DATA[region];
       var rt2 = socialRates(region);
+      var ur2 = unempRangeOf(region, flex);
       if (flex && rt2) {
         var mtxt = [];
         for (var mi = 0; mi < tiers.length; mi++) {
@@ -1355,7 +1369,7 @@ function syncUI() {
         noteEl.textContent = (c2.name || '') + '·灵活就业，单位＋个人两部分全部由个人承担，基数统一按 2026 年 10 月起：'
           + '养老 ' + pctText(rt2.pRate) + '（' + th(c2.pensionMin) + '–' + th(c2.pensionMax) + '）、'
           + '医疗 ' + mtxt.join('／') + '（' + th(c2.medicalMin) + '–' + th(c2.medicalMax) + '）、'
-          + '失业 ' + pctText(rt2.uRate) + '（' + th(c2.unempMin) + '–' + th(c2.unempMax) + '），'
+          + '失业 ' + pctText(rt2.uRate) + '（' + th(ur2[0]) + '–' + th(ur2[1]) + '），'
           + '合计费率 ' + pctText(rt2.pRate + rt2.mRate + rt2.uRate) + '。工伤、生育不缴。';
       } else {
         noteEl.textContent = c2.note;
