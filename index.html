@@ -167,7 +167,8 @@ table.tbl th.r{text-align:right}
       <div class="fg">
         <label for="region">参保地区</label>
         <select id="region">
-          <option value="huizhou" selected>惠州市</option>
+          <option value="" selected>请选择参保城市</option>
+          <option value="huizhou">惠州市</option>
           <option value="shenzhen">深圳市</option>
           <option value="guangzhou">广州市</option>
           <option value="foshan">佛山市</option>
@@ -295,7 +296,7 @@ table.tbl th.r{text-align:right}
       <div class="fg">
         <label>继续教育</label>
         <label class="row-check"><input type="checkbox" id="eduDegree"> 学历（继续教育）400 元/月</label>
-        <label class="row-check"><input type="checkbox" id="eduCert"> 职业资格 3,600 元/年（300 元/月）</label>
+        <label class="row-check"><input type="checkbox" id="eduCert"> 职业资格 3,600 元/年（取证当年一次性）</label>
         <div class="sub">学历教育最长扣 48 个月；职业资格在取得证书当年扣除。</div>
       </div>
       <div class="fg">
@@ -471,7 +472,7 @@ table.tbl th.r{text-align:right}
   </div>
 
   <div class="footer">
-    <div><span class="ver">v2.0</span> · 政策口径更新于 2026-11-20 · 社保基数按 2026 年 10 月起执行</div>
+    <div><span class="ver">v2.1</span> · 政策口径更新于 2026-11-25 · 社保基数按 2026 年 10 月起执行</div>
     <div>本工具为个人测算辅助，不构成税务建议；实际申报以税务机关口径与个人真实资料为准。</div>
   </div>
 </div>
@@ -734,6 +735,12 @@ function isFlex() {
   return sel('identity') === 'flex';
 }
 
+// 参保城市选了吗：没选（空值）时不出任何数，避免默认套某个城市的费率
+function regionReady() {
+  var r = sel('region');
+  return r === 'manual' || !!REGION_DATA[r];
+}
+
 // 当前地区 + 身份下的医保档位清单（供下拉使用），无档位时返回空数组
 function medTierList(region, flex) {
   var out = [];
@@ -993,8 +1000,9 @@ function compute() {
   var childCount = Math.max(0, Math.round(val('childCount')));
   var infantCount = Math.max(0, Math.round(val('infantCount')));
   var eduMonthly = 0;
+  var certYear = 0;
   if (chk('eduDegree')) { eduMonthly += 400; }
-  if (chk('eduCert')) { eduMonthly += 300; }
+  if (chk('eduCert')) { certYear = 3600; }
 
   var medicalTotal = Math.max(0, val('medicalTotal'));
   var medicalOwner = sel('medicalOwner');
@@ -1017,8 +1025,8 @@ function compute() {
   else if (elderlyType === 'not') { elderly = Math.min(Math.max(0, val('elderlyAmt')), 1500); }
 
   var addMonthly = childCount * 2000 + infantCount * 2000 + eduMonthly + loan + rent + elderly;
-  // 专项附加扣除同样按实际工资发放月数计；大病医疗是汇算按实际支出扣，不折月
-  var addYear = addMonthly * months + medicalDeduction;
+  // 专项附加按发放月数折算；职业资格（取证当年一次性 3,600）与大病医疗不折月
+  var addYear = addMonthly * months + certYear + medicalDeduction;
 
   var ssYear = dedActualNow ? dedAnnual : ssMonth * months;
   var hfYear = dedActualNow ? 0 : hfMonth * months;
@@ -1054,11 +1062,13 @@ function compute() {
   var prepaidWage = 0;
   if (wageForWithhold > 0 && months > 0) {
     var mw = wageForWithhold / months;
-    var monthlyOther = pension / 12;
+    // 个人养老金额度要在发放月数内摊完，不能按 12 个月硬摊；职业资格同理摊到每个月
+    var monthlyOther = pension / months;
+    var certMonthly = certYear / months;
     var cumDue = 0;
     for (var m = 1; m <= months; m++) {
       var cumIncome = mw * m;
-      var cumDeduct = 5000 * m + (ssMonth + hfMonth) * m + addMonthly * m + monthlyOther * m;
+      var cumDeduct = 5000 * m + (ssMonth + hfMonth) * m + (addMonthly + certMonthly) * m + monthlyOther * m;
       var due = taxFrom(COMP_TABLE, Math.max(0, cumIncome - cumDeduct)).tax;
       prepaidWage += (due - cumDue);
       cumDue = due;
@@ -1086,7 +1096,7 @@ function compute() {
   var bizRevenue = wage + labor + bonus;
   var bizVat = bizRevenue <= 1200000 ? 0 : bizRevenue / 1.01 * 0.01;
   var bizSurtax = bizVat * 0.06;
-  var hasCompIncome = wage > 0 || labor > 0;
+  var hasCompIncome = wage > 0 || labor > 0 || bonus > 0;
   var bizBasic = hasCompIncome ? 0 : (60000 + ssYear + hfYear + addYear + pension);
   var bizTaxable = Math.max(0, bizRevenue - Math.max(0, val('costInvoice')) - bizBasic);
   var bizTaxBefore = taxFrom(BIZ_TABLE, bizTaxable).tax;
@@ -1105,7 +1115,7 @@ function compute() {
     wage: wage, labor: labor, months: months, times: times, bonus: bonus,
     bonusMethod: bonusMethod, ssMonth: ssMonth, hfMonth: hfMonth,
     dedMode: dedActualNow ? 'actual' : 'budget',
-    ssYear: ssYear, hfYear: hfYear, addMonthly: addMonthly, addYear: addYear,
+    ssYear: ssYear, hfYear: hfYear, addMonthly: addMonthly, addYear: addYear, certYear: certYear,
     medicalDeduction: medicalDeduction, medicalTotal: medicalTotal, medicalOwner: medicalOwner,
     pension: pension, ssBase: ssBase, avgWage: avgWage,
     laborNet: laborNet, vat: vat, surtax: surtax, vatExempt: vatExempt,
@@ -1134,12 +1144,16 @@ function render(d) {
     setText('dedSsSum', ssTotal > 0.005 ? money(ssTotal) + '/月' : '未填');
   }
   setText('dedOtherSum', d.pension > 0.005 ? money(d.pension) + '/年' : '未填');
-  var addMed = d.addYear - d.addMonthly * d.months;
+  var addMed = d.addYear - d.addMonthly * d.months - d.certYear;
+  var addExtra = [];
+  if (d.certYear > 0.005) { addExtra.push('职业资格 ' + money(d.certYear)); }
+  if (addMed > 0.005) { addExtra.push('大病 ' + money(addMed)); }
+  var addExtraText = addExtra.length ? '＋' + addExtra.join('＋') : '';
   setText('dedAddSum', d.addMonthly > 0.005
-    ? money(d.addMonthly) + '/月' + (addMed > 0.005 ? '＋大病 ' + money(addMed) : '')
-    : (addMed > 0.005 ? '大病 ' + money(addMed) : '未填'));
-  // 没填任何收入时不显示 0，留空或 --
-  var hasIncome = d.wage > 0 || d.labor > 0 || d.bonus > 0;
+    ? money(d.addMonthly) + '/月' + addExtraText
+    : (addExtra.length ? addExtra.join('＋') : '未填'));
+  // 没填收入、或还没选参保城市时都不显示 0，留空或 --
+  var hasIncome = (d.wage > 0 || d.labor > 0 || d.bonus > 0) && regionReady();
   setText('deductSum', hasIncome ? ('扣除合计 ' + money(d.ssYear + d.hfYear + d.addYear + d.pension) + '/年') : '');
   setText('kAnnual', hasIncome ? money(d.totalDue) : '--');
   setText('kPrepaid', hasIncome ? money(d.prepaidTotal) : '--');
@@ -1162,6 +1176,9 @@ function render(d) {
 
   // 提示
   var notes = [];
+  if (!regionReady()) {
+    notes.push('还没选参保城市。选完城市才会按当地费率算，别拿别处的数字当自己的。');
+  }
   if (d.avgWage > 0 && d.ssBase > 0) {
     var lo = d.avgWage * 0.6;
     var hi = d.avgWage * 3;
@@ -1207,7 +1224,8 @@ function render(d) {
     var addLabel = '减：专项附加扣除';
     var addParts = [];
     if (d.addMonthly > 0.005) { addParts.push(money(d.addMonthly) + ' × ' + d.months + ' 个月'); }
-    var addMedAmt = d.addYear - d.addMonthly * d.months;
+    var addMedAmt = d.addYear - d.addMonthly * d.months - d.certYear;
+    if (d.certYear > 0.005) { addParts.push('职业资格 ' + money(d.certYear) + '（当年一次性）'); }
     if (addMedAmt > 0.005) { addParts.push('大病 ' + money(addMedAmt)); }
     if (addParts.length) { addLabel += '（' + addParts.join('，') + '）'; }
     body.appendChild(addRow(addLabel, money(d.addYear)));
@@ -1244,7 +1262,7 @@ function render(d) {
     var gap = Math.abs(d.compAfter - d.bizAfter);
     var verdict = gap < 0.005 ? '两种模式税后收入相同' :
       (d.bizAfter > d.compAfter ? '个体户模式多到手 ' + money(gap) : '综合所得模式多到手 ' + money(gap));
-    setText('compareSum', (d.wage > 0 || d.labor > 0 || d.bonus > 0) ? verdict : '');
+    setText('compareSum', ((d.wage > 0 || d.labor > 0 || d.bonus > 0) && regionReady()) ? verdict : '');
     var tr = document.createElement('tr');
     var td = document.createElement('td');
     td.colSpan = 3;
@@ -1451,7 +1469,9 @@ var PARAM_ALIAS = {
   dedmode: 'dedMode', dedsum: 'ssHfYear', dedyear: 'ssHfYear', sshf: 'ssHfYear', sshfyear: 'ssHfYear',
   ssbase: 'ssBase', avgwage: 'avgWage', medtier: 'medTier',
   identity: 'identity', hukou: 'hukou',
-  medicalowner: 'medicalOwner', region: 'region'
+  medicalowner: 'medicalOwner', region: 'region',
+  educert: 'eduCert', edudegree: 'eduDegree', elderlyamt: 'elderlyAmt',
+  bonusmethod: 'bonusMethod', bonustoggle: 'bonusToggle'
 };
 
 function applyUrlParams() {
@@ -1490,6 +1510,10 @@ function applyUrlParams() {
       }
     }
   }
+  // 链接里给了年终奖金额，就把「有全年一次性奖金」自动勾上，否则那个数会被忽略
+  var bt = document.getElementById('bonusToggle');
+  var ba = document.getElementById('bonusAmount');
+  if (bt && ba && Math.max(0, parseFloat(ba.value) || 0) > 0) { bt.checked = true; }
 }
 
 // 结果摘要：文字版和图片版共用同一份数据，避免两处口径不一致
@@ -1519,6 +1543,7 @@ function summaryModel() {
 }
 
 function buildSummary() {
+  if (!regionReady()) { return ''; }
   var m = summaryModel();
   if (!m) { return ''; }
   var L = ['【个税测算结果】'];
@@ -1561,6 +1586,7 @@ function roundRectPath(g, x, y, w, h, r) {
 }
 
 function drawSummaryImage() {
+  if (!regionReady()) { return null; }
   var m = summaryModel();
   if (!m) { return null; }
   var W = 750, PAD = 46, DPR = 2, ROW = 36, CARD_H = 116;
@@ -1693,7 +1719,7 @@ function drawSummaryImage() {
   g.font = '13px ' + IMG_FONT;
   g.fillText('由「个税小工具」生成 · 全部在本机浏览器计算，工资数据不上传', PAD, footTop + 28);
   g.font = '12.5px ' + IMG_FONT;
-  g.fillText('结果仅供参考，最终以税务机关口径为准 · v2.0（政策口径 2026-11-20）', PAD, footTop + 52);
+  g.fillText('结果仅供参考，最终以税务机关口径为准 · v2.1（政策口径 2026-11-25）', PAD, footTop + 52);
   // 在线版链接：图片被转发出去后，别人看到能自己打开重算
   g.fillStyle = '#667eea';
   g.font = 'bold 13.5px ' + IMG_FONT;
