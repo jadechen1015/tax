@@ -106,6 +106,42 @@ table.tbl th.r{text-align:right}
   table.tbl td,table.tbl th{padding:7px 8px}
   .copy-row{flex-direction:column;align-items:stretch}
   .btn-copy{justify-content:center}
+}/* ---- 分段选择：收入类型 ---- */
+.seg{display:inline-flex;background:#f1f3f9;border-radius:11px;padding:3px;gap:3px;margin-bottom:18px;flex-wrap:wrap}
+.seg-btn{border:none;background:none;font-family:inherit;font-size:14px;font-weight:500;color:#6b7280;padding:9px 18px;border-radius:9px;cursor:pointer;transition:background .15s,color .15s}
+.seg-btn:hover{color:#4b5563}
+.seg-btn.on{background:#fff;color:#4338ca;box-shadow:0 1px 4px rgba(0,0,0,.12);font-weight:600}
+/* ---- chips：专项附加扣除按项展开 ---- */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 0}
+.chip{border:1.5px solid #e2e5f0;background:#fff;font-family:inherit;font-size:13px;color:#4b5563;padding:7px 15px;border-radius:999px;cursor:pointer;transition:border-color .15s,color .15s,background .15s}
+.chip:hover{border-color:#a5b4fc;color:#4338ca}
+.chip.on{background:#eef2ff;border-color:#667eea;color:#4338ca;font-weight:600}
+.chip-panel{display:none;margin-top:14px}
+.chip-panel.on{display:block}
+.chip-hint{font-size:11px;color:#9ca3af;margin:10px 0 0;line-height:1.6}
+.slim-hint{font-size:12px;color:#6b7280;background:#f8fafc;border-radius:9px;padding:9px 12px;margin-top:14px;line-height:1.7}
+.link-btn{background:none;border:none;padding:0;font-family:inherit;font-size:12px;color:#667eea;text-decoration:underline;cursor:pointer}
+/* ---- 吸底结果条 ---- */
+.sticky-result{position:fixed;left:0;right:0;bottom:0;z-index:60;background:rgba(255,255,255,.97);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-top:1px solid #e8eaf3;box-shadow:0 -6px 24px rgba(17,24,39,.08);padding:10px 16px calc(10px + env(safe-area-inset-bottom))}
+.sticky-inner{max-width:960px;margin:0 auto;display:flex;align-items:center;gap:14px}
+.sr-main{flex:0 0 auto;min-width:132px}
+.sr-label{font-size:11px;color:#9ca3af;margin-bottom:2px}
+.sr-value{font-size:21px;font-weight:700;color:#111827;font-variant-numeric:tabular-nums;line-height:1.15}
+.sr-value.pos{color:#047857}
+.sr-value.neg{color:#b91c1c}
+.sr-sub{flex:1 1 auto;font-size:12px;color:#6b7280;line-height:1.5;min-width:0}
+.sr-btn{flex:0 0 auto;background:#667eea;color:#fff;border:none;border-radius:9px;padding:9px 14px;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:background .15s}
+.sr-btn:hover{background:#5a6fd6}
+body{padding-bottom:92px}
+@media(max-width:640px){
+  .seg{display:flex;margin-bottom:14px}
+  .seg-btn{flex:1 1 0;padding:8px 6px;font-size:13px;text-align:center}
+  .chip{font-size:12px;padding:6px 12px}
+  .sticky-inner{gap:10px}
+  .sr-main{min-width:100px}
+  .sr-value{font-size:18px}
+  .sr-sub{font-size:11px}
+  .sr-btn{padding:8px 11px;font-size:12px}
 }
 </style>
 </head>
@@ -123,24 +159,29 @@ table.tbl th.r{text-align:right}
 
   <div class="card">
     <h2>① 收入</h2>
+    <div class="seg" id="incType" role="tablist" aria-label="收入类型">
+      <button type="button" class="seg-btn on" data-inc="wage">工资薪金</button>
+      <button type="button" class="seg-btn" data-inc="labor">劳务报酬</button>
+      <button type="button" class="seg-btn" data-inc="both">两者都有</button>
+    </div>
     <div class="grid">
-      <div class="fg">
+      <div class="fg" id="fgWageYear">
         <label for="wageYear">全年工资薪金（元）<span class="h">税前，已扣社保公积金前</span></label>
         <input type="text" id="wageYear" value="" placeholder="0" autocomplete="off">
       </div>
-      <div class="fg">
-        <label for="laborYear">全年劳务报酬（元）<span class="h">含税金额，全年合计</span></label>
-        <input type="text" id="laborYear" value="" placeholder="0" autocomplete="off">
-      </div>
-      <div class="fg">
+      <div class="fg" id="fgWageMonths">
         <label for="wageMonths">工资发放月数<span class="h">默认12；年中入职/离职按实际月数</span></label>
         <input type="text" id="wageMonths" value="12" autocomplete="off">
       </div>
-      <div class="fg">
+      <div class="fg" id="fgLaborYear">
+        <label for="laborYear">全年劳务报酬（元）<span class="h">含税金额，全年合计</span></label>
+        <input type="text" id="laborYear" value="" placeholder="0" autocomplete="off">
+      </div>
+      <div class="fg" id="fgLaborTimes">
         <label for="laborTimes">劳务报酬支付次数<span class="h">默认12；按次预扣用</span></label>
         <input type="text" id="laborTimes" value="12" autocomplete="off">
       </div>
-      <div class="fg">
+      <div class="fg" id="fgBonus">
         <label class="row-check"><input type="checkbox" id="bonusToggle"> 有全年一次性奖金</label>
         <div id="bonusBox" style="display:none">
           <input type="text" id="bonusAmount" value="" placeholder="0" autocomplete="off" style="margin-bottom:8px">
@@ -149,6 +190,7 @@ table.tbl th.r{text-align:right}
         </div>
       </div>
     </div>
+    <div class="slim-hint" id="incHint">只想知道一笔劳务报酬扣多少税？点上面的「劳务报酬」，社保那栏会收起来，直接给每次预扣和汇算退补。</div>
   </div>
 
   <div class="card">
@@ -187,6 +229,10 @@ table.tbl th.r{text-align:right}
           <option value="flex">灵活就业（全额自缴）</option>
         </select>
         <div class="sub" id="identityHint">个人只缴养老 8%、医疗 2%、失业 0.2%</div>
+      </div>
+      <div class="fg" id="fgFlexUnemp">
+        <label class="row-check"><input type="checkbox" id="flexUnemp"> 参加失业保险（1%）</label>
+        <div class="sub">广东只限新业态平台就业人员和无雇工个体工商户、且已办就业登记才缴；不勾就不含这 1%。</div>
       </div>
       <div class="fg" id="fgHukou">
         <label for="hukou">深圳户籍<span class="h">深户养老 21%、非深户 20%</span></label>
@@ -284,57 +330,94 @@ table.tbl th.r{text-align:right}
       <span class="fold-a">▶</span>
     </button>
     <div class="fold-sub-body" id="dedAddWrap">
-    <div class="grid">
-      <div class="fg">
-        <label for="childCount">子女教育人数<span class="h">2,000 元/人/月</span></label>
-        <input type="text" id="childCount" value="0" autocomplete="off">
+    <div class="chips" id="addChips">
+      <button type="button" class="chip" data-chip="child">子女教育</button>
+      <button type="button" class="chip" data-chip="infant">3岁以下婴幼儿</button>
+      <button type="button" class="chip" data-chip="edu">继续教育</button>
+      <button type="button" class="chip" data-chip="medical">大病医疗</button>
+      <button type="button" class="chip" data-chip="housing">住房</button>
+      <button type="button" class="chip" data-chip="elderly">赡养老人</button>
+    </div>
+    <div class="chip-hint">有哪项就点哪项，就地展开填写；没点的按 0 计，不影响结果。</div>
+
+    <div class="chip-panel" id="panelChild">
+      <div class="grid">
+        <div class="fg">
+          <label for="childCount">子女教育人数<span class="h">2,000 元/人/月</span></label>
+          <input type="text" id="childCount" value="0" autocomplete="off">
+        </div>
       </div>
-      <div class="fg">
-        <label for="infantCount">3岁以下婴幼儿人数<span class="h">2,000 元/人/月</span></label>
-        <input type="text" id="infantCount" value="0" autocomplete="off">
+    </div>
+
+    <div class="chip-panel" id="panelInfant">
+      <div class="grid">
+        <div class="fg">
+          <label for="infantCount">3岁以下婴幼儿人数<span class="h">2,000 元/人/月</span></label>
+          <input type="text" id="infantCount" value="0" autocomplete="off">
+        </div>
       </div>
-      <div class="fg">
-        <label>继续教育</label>
-        <label class="row-check"><input type="checkbox" id="eduDegree"> 学历（继续教育）400 元/月</label>
-        <label class="row-check"><input type="checkbox" id="eduCert"> 职业资格 3,600 元/年（取证当年一次性）</label>
-        <div class="sub">学历教育最长扣 48 个月；职业资格在取得证书当年扣除。</div>
+    </div>
+
+    <div class="chip-panel" id="panelEdu">
+      <div class="grid">
+        <div class="fg">
+          <label>继续教育</label>
+          <label class="row-check"><input type="checkbox" id="eduDegree"> 学历（继续教育）400 元/月</label>
+          <label class="row-check"><input type="checkbox" id="eduCert"> 职业资格 3,600 元/年（取证当年一次性）</label>
+          <div class="sub">学历教育最长扣 48 个月；职业资格在取得证书当年扣除。</div>
+        </div>
       </div>
-      <div class="fg">
-        <label for="medicalTotal">大病医疗自付累计（元/年）<span class="h">医保目录内，超 1.5 万部分，限额 8 万</span></label>
-        <input type="text" id="medicalTotal" value="" placeholder="0" autocomplete="off" style="margin-bottom:8px">
-        <select id="medicalOwner">
-          <option value="self">由本人扣除</option>
-          <option value="spouse">由配偶扣除（本人不扣）</option>
-        </select>
-        <div class="sub">可由本人或配偶一方扣除，未成年子女由父母一方扣除。</div>
+    </div>
+
+    <div class="chip-panel" id="panelMedical">
+      <div class="grid">
+        <div class="fg">
+          <label for="medicalTotal">大病医疗自付累计（元/年）<span class="h">医保目录内，超 1.5 万部分，限额 8 万</span></label>
+          <input type="text" id="medicalTotal" value="" placeholder="0" autocomplete="off" style="margin-bottom:8px">
+          <select id="medicalOwner">
+            <option value="self">由本人扣除</option>
+            <option value="spouse">由配偶扣除（本人不扣）</option>
+          </select>
+          <div class="sub">可由本人或配偶一方扣除，未成年子女由父母一方扣除。</div>
+        </div>
       </div>
-      <div class="fg">
-        <label for="housingType">住房<span class="h">贷款利息与租金只能二选一</span></label>
-        <select id="housingType">
-          <option value="none">不填</option>
-          <option value="loan">住房贷款利息 1,000 元/月</option>
-          <option value="rent1500">住房租金 1,500 元/月（直辖市、省会、计划单列市等）</option>
-          <option value="rent1100">住房租金 1,100 元/月（市辖区户籍人口＞100 万）</option>
-          <option value="rent800">住房租金 800 元/月（市辖区户籍人口≤100 万）</option>
-        </select>
-        <div class="sub">房贷利息和住房租金同一纳税年度内只能享受其中一项。</div>
+    </div>
+
+    <div class="chip-panel" id="panelHousing">
+      <div class="grid">
+        <div class="fg">
+          <label for="housingType">住房<span class="h">贷款利息与租金只能二选一</span></label>
+          <select id="housingType">
+            <option value="none">不填</option>
+            <option value="loan">住房贷款利息 1,000 元/月</option>
+            <option value="rent1500">住房租金 1,500 元/月（直辖市、省会、计划单列市等）</option>
+            <option value="rent1100">住房租金 1,100 元/月（市辖区户籍人口＞100 万）</option>
+            <option value="rent800">住房租金 800 元/月（市辖区户籍人口≤100 万）</option>
+          </select>
+          <div class="sub">房贷利息和住房租金同一纳税年度内只能享受其中一项。</div>
+        </div>
       </div>
-      <div class="fg">
-        <label for="elderlyType">赡养老人</label>
-        <select id="elderlyType">
-          <option value="none">不填</option>
-          <option value="only">独生子女 3,000 元/月</option>
-          <option value="not">非独生子女（分摊）</option>
-        </select>
-        <input type="text" id="elderlyAmt" value="" autocomplete="off" placeholder="每月分摊额，不超过 1,500 元" style="display:none;margin-top:8px">
-        <div class="sub">非独生子女与兄弟姐妹分摊，每人每月不超过 1,500 元。</div>
+    </div>
+
+    <div class="chip-panel" id="panelElderly">
+      <div class="grid">
+        <div class="fg">
+          <label for="elderlyType">赡养老人</label>
+          <select id="elderlyType">
+            <option value="none">不填</option>
+            <option value="only">独生子女 3,000 元/月</option>
+            <option value="not">非独生子女（分摊）</option>
+          </select>
+          <input type="text" id="elderlyAmt" value="" autocomplete="off" placeholder="每月分摊额，不超过 1,500 元" style="display:none;margin-top:8px">
+          <div class="sub">非独生子女与兄弟姐妹分摊，每人每月不超过 1,500 元。</div>
+        </div>
       </div>
     </div>
     </div>
     </div>
   </div>
 
-  <div class="card">
+  <div class="card" id="resultCard">
     <h2>③ 汇算结果</h2>
     <div class="kpis">
       <div class="kpi">
@@ -471,8 +554,19 @@ table.tbl th.r{text-align:right}
     </div>
   </div>
 
+  <div class="sticky-result" id="stickyBar">
+    <div class="sticky-inner">
+      <div class="sr-main">
+        <div class="sr-label">年度应纳个税</div>
+        <div class="sr-value" id="srValue">--</div>
+      </div>
+      <div class="sr-sub" id="srSub">填全年收入、选参保城市后出结果</div>
+      <button type="button" class="sr-btn" id="srJump">看明细</button>
+    </div>
+  </div>
+
   <div class="footer">
-    <div><span class="ver">v2.1</span> · 政策口径更新于 2026-11-25 · 社保基数按 2026 年 10 月起执行</div>
+    <div><span class="ver">v2.2</span> · 政策口径更新于 2026-11-25 · 社保基数按 2026 年 10 月起执行</div>
     <div>本工具为个人测算辅助，不构成税务建议；实际申报以税务机关口径与个人真实资料为准。</div>
   </div>
 </div>
@@ -518,13 +612,14 @@ var REGION_DATA = {
     pensionRate: 0.08,
     pensionMin: 5521,
     pensionMax: 27603,
-    medicalRate: 0.02,
     medicalMin: 4463,
     medicalMax: 22315,
+    medicalTiers: { t1: 0.02, t2: 0 },
+    tierNames: { t1: '职工医保（统账结合）', t2: '职工医保（单建统筹）' },
     unempRate: 0.002,
     unempMin: 2040,
     unempMax: 28710,
-    note: '惠州口径（企业职工），基数统一按 2026 年 10 月起执行：养老 8%（基数 5,521–27,603）、医疗（统账结合）2%（基数 4,463–22,315）、失业 0.2%（基数 2,040–28,710）、工伤与生育个人不缴，个人合计 10.2%。生育 0.5% 含在单位 5.6% 内，个人不缴。'
+    note: '惠州口径（企业职工），基数统一按 2026 年 10 月起执行：养老 8%（基数 5,521–27,603）、医疗 职工医保（统账结合）2%／职工医保（单建统筹）0%（基数 4,463–22,315）、失业 0.2%（基数 2,040–28,710）、工伤与生育个人不缴。两档共用同一组基数区间。'
   },
   shenzhen: {
     name: '深圳市',
@@ -561,13 +656,14 @@ var REGION_DATA = {
     pensionRate: 0.08,
     pensionMin: 5521,
     pensionMax: 27603,
-    medicalRate: 0.02,
     medicalMin: 4669,
     medicalMax: 9660,
+    medicalTiers: { t1: 0.02, t2: 0 },
+    tierNames: { t1: '职工医保（统账结合）', t2: '职工医保（单建统筹）' },
     unempRate: 0.002,
     unempMin: 2300,
     unempMax: 31395,
-    note: '佛山口径（企业职工），基数统一按 2026 年 10 月起执行：养老 8%（5,521–27,603，省统一）、医疗 2%（4,669–9,660）、失业 0.2%（2,300–31,395）、工伤与生育个人不缴。'
+    note: '佛山口径（企业职工），基数统一按 2026 年 10 月起执行：养老 8%（5,521–27,603，省统一）、医疗 职工医保（统账结合）2%／职工医保（单建统筹）0%（4,669–9,660）、失业 0.2%（2,300–31,395）、工伤与生育个人不缴。两档共用同一组基数区间。'
   },
   dongguan: {
     name: '东莞市',
@@ -577,12 +673,12 @@ var REGION_DATA = {
     pensionMax: 27603,
     medicalMin: 4775,
     medicalMax: 27549,
-    medicalTiers: { t1: 0.02, t2: 0.005 },
-    tierNames: { t1: '职工医保（统账结合）', t2: '职工医保（单建统筹）' },
+    medicalTiers: { t1: 0.02, t1b: 0.005, t2: 0.005 },
+    tierNames: { t1: '职工医保（统账结合·有个账）', t1b: '职工医保（统账结合·无个账）', t2: '职工医保（单建统筹）' },
     unempRate: 0.002,
-    unempMin: 2080,
+    unempMin: 2300,
     unempMax: 27702,
-    note: '东莞口径（企业职工），基数统一按 2026 年 10 月起执行：养老 8%（5,521–27,603，省统一）、医疗 职工医保（统账结合）2%／职工医保（单建统筹）0.5%（基数 4,775–27,549）、失业 0.2%（2,080–27,702）、工伤与生育个人不缴。两档共用同一组基数区间。'
+    note: '东莞口径（企业职工），基数统一按 2026 年 10 月起执行：养老 8%（5,521–27,603，省统一）、医疗 职工医保（统账结合·有个账）2%／职工医保（统账结合·无个账）0.5%／职工医保（单建统筹）0.5%（基数 4,775–27,549）、失业 0.2%（2,300–27,702）、工伤与生育个人不缴。三档共用同一组基数区间。'
   },
   zhongshan: {
     name: '中山市',
@@ -590,14 +686,14 @@ var REGION_DATA = {
     pensionRate: 0.08,
     pensionMin: 5521,
     pensionMax: 27603,
-    medicalMin: 4520,
+    medicalMin: 4250,
     medicalMax: 21250,
     medicalTiers: { t1: 0.02, t2: 0.007 },
     tierNames: { t1: '职工医保（统账结合）', t2: '职工医保（单建统筹）' },
     unempRate: 0.002,
     unempMin: 2300,
     unempMax: 29430,
-    note: '中山口径（企业职工），基数统一按 2026 年 10 月起执行：养老 8%（5,521–27,603，省统一）、医疗 职工医保（统账结合）2%／职工医保（单建统筹）0.7%（基数 4,520–21,250）、失业 0.2%（2,300–29,430）、工伤与生育个人不缴。两档共用同一组基数区间。'
+    note: '中山口径（企业职工），基数统一按 2026 年 10 月起执行：养老 8%（5,521–27,603，省统一）、医疗 职工医保（统账结合）2%／职工医保（单建统筹）0.7%（基数 4,250–21,250）、失业 0.2%（2,300–29,430）、工伤与生育个人不缴。两档共用同一组基数区间。'
   },
   zhuhai: {
     name: '珠海市',
@@ -605,13 +701,14 @@ var REGION_DATA = {
     pensionRate: 0.08,
     pensionMin: 5521,
     pensionMax: 27603,
-    medicalRate: 0.02,
     medicalMin: 4775,
     medicalMax: 27549,
+    medicalTiers: { t1: 0.015, t2: 0 },
+    tierNames: { t1: '职工医保（统账结合）', t2: '职工医保（单建统筹）' },
     unempRate: 0.002,
     unempMin: 2300,
     unempMax: 36279,
-    note: '珠海口径（企业职工），基数统一按 2026 年 10 月起执行：养老 8%（5,521–27,603，省统一）、医疗 2%（4,775–27,549）、失业 0.2%（2,300–36,279）、工伤与生育个人不缴。'
+    note: '珠海口径（企业职工），基数统一按 2026 年 10 月起执行：养老 8%（5,521–27,603，省统一）、医疗 职工医保（统账结合）1.5%／职工医保（单建统筹）0%（4,775–27,549）、失业 0.2%（2,300–36,279）、工伤与生育个人不缴。两档共用同一组基数区间。'
   },
   jiangmen: {
     name: '江门市',
@@ -637,14 +734,16 @@ var REGION_DATA = {
     medicalMin: 4520,
     medicalMax: 22599,
     unempRate: 0.002,
-    unempMin: 1850,
+    unempMin: 2040,
     unempMax: 28220,
-    note: '肇庆口径（企业职工），基数统一按 2026 年 10 月起执行：养老 8%（5,521–27,603，省统一）、医疗 2%（4,520–22,599）、失业 0.2%（1,850–28,220）、工伤与生育个人不缴。'
+    note: '肇庆口径（企业职工），基数统一按 2026 年 10 月起执行：养老 8%（5,521–27,603，省统一）、医疗 2%（4,520–22,599）、失业 0.2%（2,040–28,220）、工伤与生育个人不缴。'
   }
 };
 
 // 灵活就业：单位＋个人两部分都由自己承担，用「全口径合计」费率；基数区间与职工口径相同
 // 医保可选：灵活就业医保（统账结合，费率较高）或灵活就业医保（单建统筹，费率较低）
+// 失业不是所有灵活就业人员都缴：广东只限新业态平台就业人员和无雇工个体工商户、且需办就业登记，
+// 所以 1% 做成 flexUnemp 开关，默认不勾（只在算社保时才加）
 var FLEX_DATA = {
   huizhou: {
     pension: 0.20,
@@ -676,7 +775,7 @@ var FLEX_DATA = {
     medical: { t1: 0.07, t1b: 0.05, t2: 0.0295 },
     medicalNames: { t1: '灵活就业医保（统账结合·有个账）', t1b: '灵活就业医保（统账结合·无个账）', t2: '灵活就业医保（单建统筹）' },
     unemp: 0.01,
-    unempRange: [2080, 27702]
+    unempRange: [2300, 27702]
   },
   zhongshan: {
     pension: 0.20,
@@ -779,7 +878,8 @@ function socialRates(region) {
     if (keys.indexOf(tier) < 0) { tier = keys[0]; }
     mRate = fl.medical[tier];
     medName = (fl.medicalNames || {})[tier] || tier;
-    uRate = fl.unemp;
+    // 灵活就业的失业 1% 可选：广东仅新业态平台就业人员、无雇工个体户且已办就业登记才缴
+    uRate = chk('flexUnemp') ? fl.unemp : 0;
   } else {
     pRate = cfg.pensionRate;
     if (cfg.medicalTiers) {
@@ -853,7 +953,9 @@ function updateSocial() {
   if (bd) {
     var txt = '养老 ' + Math.round(pBase) + '×' + pctText(rt.pRate) + '＝' + pension.toFixed(2) +
               '；医疗 ' + Math.round(mBase) + '×' + pctText(rt.mRate) + '＝' + medical.toFixed(2) +
-              '；失业 ' + Math.round(uBase) + '×' + pctText(rt.uRate) + '＝' + unemp.toFixed(2);
+              (rt.uRate > 0
+                ? ('；失业 ' + Math.round(uBase) + '×' + pctText(rt.uRate) + '＝' + unemp.toFixed(2))
+                : '；未参加失业保险');
     if (other > 0) { txt += '；其他 ' + other.toFixed(2); }
     if (pBase !== wage || uBase !== wage || mBase !== wage) {
       txt += '（缴费工资已按上下限调整）';
@@ -1154,7 +1256,11 @@ function render(d) {
     : (addExtra.length ? addExtra.join('＋') : '未填'));
   // 没填收入、或还没选参保城市时都不显示 0，留空或 --
   var hasIncome = (d.wage > 0 || d.labor > 0 || d.bonus > 0) && regionReady();
-  setText('deductSum', hasIncome ? ('扣除合计 ' + money(d.ssYear + d.hfYear + d.addYear + d.pension) + '/年') : '');
+  var dedSumText = hasIncome ? ('扣除合计 ' + money(d.ssYear + d.hfYear + d.addYear + d.pension) + '/年') : '';
+  if (hasIncome && d.wage <= 0 && d.labor > 0 && (d.ssYear + d.hfYear) < 0.005) {
+    dedSumText = '只算劳务报酬，社保可不填';
+  }
+  setText('deductSum', dedSumText);
   setText('kAnnual', hasIncome ? money(d.totalDue) : '--');
   setText('kPrepaid', hasIncome ? money(d.prepaidTotal) : '--');
   var diffEl = document.getElementById('kDiff');
@@ -1199,6 +1305,9 @@ function render(d) {
     notes.push('住房按贷款利息 1,000 元/月 扣除，同年度不再享受住房租金。');
   } else if (d.rent > 0) {
     notes.push('住房按租金 ' + money(d.rent) + '/月 扣除，同年度不再享受贷款利息。');
+  }
+  if (d.wage <= 0 && d.labor > 0) {
+    notes.push('只算劳务报酬：每次预扣 ' + money(d.perTimeTax) + '，' + d.times + ' 次合计 ' + money(d.prepaidLabor) + '；年度汇算按综合所得税率重算，两者差额就是退补税额。');
   }
   var noteBox = document.getElementById('noteBox');
   if (noteBox) {
@@ -1271,6 +1380,33 @@ function render(d) {
     tr.appendChild(td);
     cb.appendChild(tr);
   }
+
+  // 吸底结果条：任何输入变化都实时更新，不用滚到 ③ 才看得到
+  var srVal = document.getElementById('srValue');
+  var srSub = document.getElementById('srSub');
+  if (srVal) {
+    if (!hasIncome) {
+      srVal.textContent = '--';
+      srVal.className = 'sr-value';
+      if (srSub) { srSub.textContent = '填全年收入、选参保城市后出结果'; }
+    } else {
+      srVal.textContent = money(d.totalDue);
+      srVal.className = 'sr-value' + (d.diff > 0.005 ? ' pos' : (d.diff < -0.005 ? ' neg' : ''));
+      if (srSub) {
+        var bits = [];
+        if (d.wage <= 0 && d.labor > 0) {
+          bits.push('每次预扣 ' + money(d.perTimeTax) + ' × ' + d.times + ' 次 ＝ ' + money(d.prepaidLabor));
+        } else {
+          bits.push('社保 ' + money(d.ssMonth + d.hfMonth) + '/月');
+        }
+        bits.push('应税 ' + money(d.taxable));
+        if (d.diff > 0.005) { bits.push('退税 ' + money(d.diff)); }
+        else if (d.diff < -0.005) { bits.push('补税 ' + money(-d.diff)); }
+        else { bits.push('不退不补'); }
+        srSub.textContent = bits.join(' · ');
+      }
+    }
+  }
 }
 
 function setDisplay(id, show) {
@@ -1295,6 +1431,7 @@ function syncUI() {
 
   // 参保身份、深圳户籍只在按月预算时出现
   setDisplay('fgIdentity', auto && !deductActual);
+  setDisplay('fgFlexUnemp', auto && flex && !deductActual);
   setDisplay('fgHukou', auto && flex && region === 'shenzhen' && !deductActual);
   var idHint = document.getElementById('identityHint');
   if (idHint) {
@@ -1384,10 +1521,13 @@ function syncUI() {
         for (var mi = 0; mi < tiers.length; mi++) {
           mtxt.push(tiers[mi].label + ' ' + pctText(tiers[mi].rate));
         }
+        var uTxt = rt2.uRate > 0
+          ? ('失业 ' + pctText(rt2.uRate) + '（' + th(ur2[0]) + '–' + th(ur2[1]) + '），')
+          : '未参加失业保险（符合新业态平台就业／无雇工个体户并已办就业登记才缴 1%），';
         noteEl.textContent = (c2.name || '') + '·灵活就业，单位＋个人两部分全部由个人承担，基数统一按 2026 年 10 月起：'
           + '养老 ' + pctText(rt2.pRate) + '（' + th(c2.pensionMin) + '–' + th(c2.pensionMax) + '）、'
           + '医疗 ' + mtxt.join('／') + '（' + th(c2.medicalMin) + '–' + th(c2.medicalMax) + '）、'
-          + '失业 ' + pctText(rt2.uRate) + '（' + th(ur2[0]) + '–' + th(ur2[1]) + '），'
+          + uTxt
           + '合计费率 ' + pctText(rt2.pRate + rt2.mRate + rt2.uRate) + '。工伤、生育不缴。';
       } else {
         noteEl.textContent = c2.note;
@@ -1396,6 +1536,95 @@ function syncUI() {
       noteEl.textContent = '手动填写模式：请直接录入社保个人月缴额；如填了缴费基数与当地社平工资，会校验 60%–300% 区间。';
     }
   }
+}
+
+// ---- 收入类型：工资薪金 / 劳务报酬 / 两者都有 ----
+var INC_TYPE = 'wage';
+var __lastIncType = null;
+
+function detectIncomeType() {
+  var w = Math.max(0, val('wageYear'));
+  var l = Math.max(0, val('laborYear'));
+  if (w > 0 && l > 0) { return 'both'; }
+  if (l > 0) { return 'labor'; }
+  return 'wage';
+}
+
+function setFold(btnId, wrapId, open) {
+  var btn = document.getElementById(btnId);
+  var wrap = document.getElementById(wrapId);
+  if (!btn || !wrap) { return; }
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  wrap.style.display = open ? 'block' : 'none';
+}
+
+function applyIncomeType(force) {
+  var wageOn = (INC_TYPE === 'wage' || INC_TYPE === 'both');
+  var laborOn = (INC_TYPE === 'labor' || INC_TYPE === 'both');
+  setDisplay('fgWageYear', wageOn);
+  setDisplay('fgWageMonths', wageOn);
+  setDisplay('fgBonus', wageOn);
+  setDisplay('fgLaborYear', laborOn);
+  setDisplay('fgLaborTimes', laborOn);
+
+  var btns = document.querySelectorAll('#incType .seg-btn');
+  for (var i = 0; i < btns.length; i++) {
+    var on = btns[i].getAttribute('data-inc') === INC_TYPE;
+    btns[i].className = 'seg-btn' + (on ? ' on' : '');
+    btns[i].setAttribute('aria-selected', on ? 'true' : 'false');
+  }
+  // 只算劳务报酬时社保那栏自动收起；有工资时展开。只在类型切换时动，避免压掉用户手动展开
+  if (force || __lastIncType !== INC_TYPE) {
+    setFold('dedSsToggle', 'dedSsWrap', wageOn);
+    __lastIncType = INC_TYPE;
+  }
+  var hint = document.getElementById('incHint');
+  if (hint) { hint.style.display = (INC_TYPE === 'labor') ? 'none' : 'block'; }
+}
+
+// ---- 专项附加扣除：chips 点哪项展开哪项，点掉就把该项清零 ----
+var CHIP_PANELS = {
+  child: 'panelChild', infant: 'panelInfant', edu: 'panelEdu',
+  medical: 'panelMedical', housing: 'panelHousing', elderly: 'panelElderly'
+};
+var CHIP_RESET = {
+  child: function () { document.getElementById('childCount').value = '0'; },
+  infant: function () { document.getElementById('infantCount').value = '0'; },
+  edu: function () {
+    document.getElementById('eduDegree').checked = false;
+    document.getElementById('eduCert').checked = false;
+  },
+  medical: function () {
+    document.getElementById('medicalTotal').value = '';
+    document.getElementById('medicalOwner').value = 'self';
+  },
+  housing: function () { document.getElementById('housingType').value = 'none'; },
+  elderly: function () {
+    document.getElementById('elderlyType').value = 'none';
+    document.getElementById('elderlyAmt').value = '';
+  }
+};
+
+function setChipVisual(key, on) {
+  var panel = document.getElementById(CHIP_PANELS[key]);
+  var chip = document.querySelector('.chip[data-chip="' + key + '"]');
+  if (panel) { panel.className = 'chip-panel' + (on ? ' on' : ''); }
+  if (chip) { chip.className = 'chip' + (on ? ' on' : ''); }
+}
+
+function chipOn(key) {
+  var chip = document.querySelector('.chip[data-chip="' + key + '"]');
+  return !!(chip && chip.className.indexOf('chip on') >= 0);
+}
+
+// 链接里带了专项附加参数时，把对应 chip 打开（只改显示，不动数值）
+function syncChipsFromValues() {
+  setChipVisual('child', Math.max(0, Math.round(val('childCount'))) > 0);
+  setChipVisual('infant', Math.max(0, Math.round(val('infantCount'))) > 0);
+  setChipVisual('edu', chk('eduDegree') || chk('eduCert'));
+  setChipVisual('medical', Math.max(0, val('medicalTotal')) > 0);
+  setChipVisual('housing', sel('housingType') !== 'none');
+  setChipVisual('elderly', sel('elderlyType') !== 'none');
 }
 
 function refresh() {
@@ -1426,6 +1655,51 @@ for (var k = 0; k < all.length; k++) {
   all[k].addEventListener('input', refresh);
   all[k].addEventListener('change', refresh);
 }
+
+// 收入类型切换：切到劳务就清掉工资，切到工资就清掉劳务，避免两边同时生效
+(function () {
+  var seg = document.getElementById('incType');
+  if (!seg) { return; }
+  seg.addEventListener('click', function (e) {
+    var b = e.target;
+    while (b && b !== seg && !(b.className && b.className.indexOf('seg-btn') >= 0)) { b = b.parentNode; }
+    if (!b || b === seg) { return; }
+    var t = b.getAttribute('data-inc');
+    if (!t) { return; }
+    if (t === 'labor') { document.getElementById('wageYear').value = ''; }
+    if (t === 'wage') { document.getElementById('laborYear').value = ''; }
+    INC_TYPE = t;
+    applyIncomeType(true);
+    refresh();
+  });
+})();
+
+// 专项附加扣除 chips
+(function () {
+  var box = document.getElementById('addChips');
+  if (!box) { return; }
+  box.addEventListener('click', function (e) {
+    var b = e.target;
+    while (b && b !== box && !(b.className && b.className.indexOf('chip') >= 0)) { b = b.parentNode; }
+    if (!b || b === box) { return; }
+    var key = b.getAttribute('data-chip');
+    if (!key) { return; }
+    var on = !chipOn(key);
+    setChipVisual(key, on);
+    if (!on && CHIP_RESET[key]) { CHIP_RESET[key](); }
+    refresh();
+  });
+})();
+
+// 吸底结果条：跳到结果区看明细
+(function () {
+  var btn = document.getElementById('srJump');
+  if (!btn) { return; }
+  btn.addEventListener('click', function () {
+    var card = document.getElementById('resultCard');
+    if (card) { card.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  });
+})();
 
 // 折叠区通用：点击标题栏展开/收起（计算明细、税率表参考、政策说明共用）
 (function () {
@@ -1469,6 +1743,7 @@ var PARAM_ALIAS = {
   dedmode: 'dedMode', dedsum: 'ssHfYear', dedyear: 'ssHfYear', sshf: 'ssHfYear', sshfyear: 'ssHfYear',
   ssbase: 'ssBase', avgwage: 'avgWage', medtier: 'medTier',
   identity: 'identity', hukou: 'hukou',
+  flexunemp: 'flexUnemp', unemp: 'flexUnemp',
   medicalowner: 'medicalOwner', region: 'region',
   educert: 'eduCert', edudegree: 'eduDegree', elderlyamt: 'elderlyAmt',
   bonusmethod: 'bonusMethod', bonustoggle: 'bonusToggle'
@@ -1719,7 +1994,7 @@ function drawSummaryImage() {
   g.font = '13px ' + IMG_FONT;
   g.fillText('由「个税小工具」生成 · 全部在本机浏览器计算，工资数据不上传', PAD, footTop + 28);
   g.font = '12.5px ' + IMG_FONT;
-  g.fillText('结果仅供参考，最终以税务机关口径为准 · v2.1（政策口径 2026-11-25）', PAD, footTop + 52);
+  g.fillText('结果仅供参考，最终以税务机关口径为准 · v2.2（政策口径 2026-11-25）', PAD, footTop + 52);
   // 在线版链接：图片被转发出去后，别人看到能自己打开重算
   g.fillStyle = '#667eea';
   g.font = 'bold 13.5px ' + IMG_FONT;
@@ -1945,6 +2220,9 @@ function copyText(text) {
 })();
 
 applyUrlParams();
+syncChipsFromValues();
+INC_TYPE = detectIncomeType();
+applyIncomeType(true);
 refresh();
 </script>
 </body>
